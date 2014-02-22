@@ -1,5 +1,5 @@
 \documentclass{article}
-<<>>=
+<<"options",include=FALSE>>=
 require(ggplot2)
 require(grid)
 @
@@ -9,6 +9,7 @@ require(grid)
 \usepackage{fixltx2e}
 \usepackage{titlesec}
 \newcommand{\sectionbreak}{\clearpage}
+\usepackage[margin=2 cm]{geometry}
 
 \makeatletter
 \setlength{\@fptop}{0pt}
@@ -35,14 +36,13 @@ s = 2 \\
 N = 200
 \end{align}
 \subsubsection{Kritiek gebied}
-Om het de methode met het kritieke gebied te berekenen moet we eerst het volgende plaatje invullen:
+Om het de methode met het kritieke gebied te berekenen moet we eerst een t-verdeling maken waarin we de kritieke gebieden markeren (Figuur \ref{fig:TWEE_V1_K_VRAAG}).
 
-<<"TWEE_V1_K_VRAAG",echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar de kritieke gebieden zich bevinden">>=
+<<"TWEE_V1_K_VRAAG",echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar de kritieke gebieden zich bevinden">>=
 N <- 200
 alpha=.05
 
 t.crit <- qt(p=alpha/2, N-1)
-
 
 rangeX <- c(-5,5)
 xx <- seq(rangeX[1],rangeX[2],length.out=1000)
@@ -51,53 +51,51 @@ density <- data.frame(x=xx, y=dt(x=xx, df=(N-1)))
 
 # H0
 polygonP <- density
-
 testK <- polygonP$x > t.crit & polygonP$x < -t.crit
-
 polygonP <- polygonP[testK,]
-
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
-  )
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x))))
 
 # HA
-
 polygonN <- density
-
 testK <- polygonN$x < t.crit 
-
 polygonN1 <- polygonN[testK,]
-
 polygonN1_dat <- 
   data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
-             y=c(polygonN1$y, rep(0, times=length(polygonN1$x)))
-  )
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x))))
 
 testK <- polygonN$x > -t.crit 
-
 polygonN2 <- polygonN[testK,]
-
 polygonN2_dat <- 
   data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
-             y=c(polygonN2$y, rep(0, times=length(polygonN2$x)))
-  )
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x))))
 
 # Plot
-ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) +
-  geom_segment(x=-t.crit,xend=-t.crit,y=0,yend=density[which.min(abs(-t.crit-density$x)),"y"]) 
+p <-
+  ggplot(density,aes(x=x,y=y)) +
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  geom_segment(x=-t.crit,xend=-t.crit,y=-Inf,yend=density[which.min(abs(-t.crit-density$x)),"y"],lwd=1.5) + 
+  annotate("text",label="T[krit]=='?'", x = t.crit , y = -Inf, vjust = 1.5,size=8,parse=TRUE) + 
+  annotate("text",label="T[krit]=='?'", x = -t.crit, y = -Inf, vjust = 1.5,size=8,parse=TRUE) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
 
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 
 @
 
-Waarbij we dus de t\textsubscript{kritiek} aan beide kanten moeten opzoeken! omdat we een tweezijdige toets hebben. Deze kritieke T-waarden kunnen we vinden in de tabel (in dit geval gebruik ik de exacte t-waardes die je door een computerprogramma kan laten berekenen). Aangezien de twee rode (kritieke) gebieden samen gelijk aan .05 moeten zijn moet ieder rood gebiedje opzich .025 groot zijn. Daarom moet je in de tabel dus kijken in de kolom van .025. Om de positieve kritieke t-waarde te weten moet je of dit getal simpelweg positief maken of in de tabel onder .975 kijken, het resultaat is hetzelfde. De kritieke t-waardes bedragen in dit geval \Sexpr{-abs(t.crit)} \& \Sexpr{abs(t.crit)}, welke we vervolgens in het plaatje kunnen toevoegen:
+Waarbij we dus de t\textsubscript{kritiek} aan beide kanten moeten opzoeken(!) omdat we een tweezijdige toets hebben. Deze kritieke t-waardes kunnen we vinden in de tabel (in dit geval gebruik ik de exacte t-waardes die je door een computerprogramma kan laten berekenen). Aangezien de twee rode (kritieke) gebieden samen gelijk aan .05 moeten zijn moet ieder rood gebiedje opzich .025 groot zijn. Daarom moet je in de tabel dus kijken in de kolom van .025. Om de positieve kritieke t-waarde te weten moet je of dit getal simpelweg positief maken of in de tabel onder .975 kijken, het resultaat is hetzelfde (controleer maar). De kritieke t-waardes bedragen in dit geval \Sexpr{-abs(t.crit)} \& \Sexpr{abs(t.crit)}, welke we vervolgens in het plaatje kunnen toevoegen (Figuur(Figuur \ref{fig:TWEE_V1_K_KWAARDE}))
 
-<<"TWEE_V1_K_KWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Kritieke t-waardes invoegen (ontgonnen uit een tabel o.i.d.)">>=
+<<"TWEE_V1_K_KWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Kritieke t-waardes invoegen (ontgonnen uit een tabel o.i.d.)">>=
 N <- 200
 alpha=.05
 
@@ -118,7 +116,7 @@ polygonP <- polygonP[testK,]
 
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # HA
@@ -131,7 +129,7 @@ polygonN1 <- polygonN[testK,]
 
 polygonN1_dat <- 
   data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
-             y=c(polygonN1$y, rep(0, times=length(polygonN1$x)))
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x)))
   )
 
 testK <- polygonN$x > -t.crit 
@@ -140,18 +138,28 @@ polygonN2 <- polygonN[testK,]
 
 polygonN2_dat <- 
   data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
-             y=c(polygonN2$y, rep(0, times=length(polygonN2$x)))
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x)))
   )
 
 # Plot
-ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) +
-  geom_segment(x=-t.crit,xend=-t.crit,y=0,yend=density[which.min(abs(-t.crit-density$x)),"y"]) 
+p <-
+  ggplot(density,aes(x=x,y=y)) +
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  geom_segment(x=-t.crit,xend=-t.crit,y=-Inf,yend=density[which.min(abs(-t.crit-density$x)),"y"],lwd=1.5) + 
+  annotate("text",label=round(t.crit,2), x = t.crit , y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(-t.crit,2), x = -t.crit, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
 
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 
 @
 
@@ -162,8 +170,8 @@ t=\frac{6.65-7}{\frac{2}{sqrt{200-1}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
-Vervolgens kunnen we de gevonden t-waarde plaatsen in het figuur:
-<<"TWEE_V1_K_TWAARDE",echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
+Vervolgens kunnen we de gevonden t-waarde plaatsen in figuur \ref{fig:TWEE_V1_K_TWAARDE}.
+<<"TWEE_V1_K_TWAARDE",echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
 N <- 200
 alpha=.05
 
@@ -189,7 +197,7 @@ polygonP <- polygonP[testK,]
 
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # HA
@@ -202,7 +210,7 @@ polygonN1 <- polygonN[testK,]
 
 polygonN1_dat <- 
   data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
-             y=c(polygonN1$y, rep(0, times=length(polygonN1$x)))
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x)))
   )
 
 testK <- polygonN$x > -t.crit 
@@ -211,33 +219,46 @@ polygonN2 <- polygonN[testK,]
 
 polygonN2_dat <- 
   data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
-             y=c(polygonN2$y, rep(0, times=length(polygonN2$x)))
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x)))
   )
 
 # Plot
-ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) +
-  geom_segment(x=-t.crit,xend=-t.crit,y=0,yend=density[which.min(abs(-t.crit-density$x)),"y"]) +
-  geom_vline(xintercept=t.value) 
+p <-
+  ggplot(density,aes(x=x,y=y)) +
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  geom_segment(x=-t.crit,xend=-t.crit,y=-Inf,yend=density[which.min(abs(-t.crit-density$x)),"y"],lwd=1.5) + 
+  annotate("text",label=round(t.crit,1), x = t.crit , y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(-t.crit,1), x = -t.crit, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(t.value,1), x = t.value, y = -Inf, vjust = 1.5,size=8, hjust=.75) + 
+  geom_vline(xintercept=t.value, lty=2) +
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
+
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
+
 @
 
 Aangezien onze gevonde t-waarde dus in het kritieke (rode) gebied ligt, verwerpen we dus de nulhypothese. 
 
 \subsubsection{P-Waarde}
-In deze methode gaan we de P-waarde uitrekenen van de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen. Hiervoor moeten we eerst de t-waarde weer uitrekenen, welke uiteraard nog steeds dezelfde uitkomst heeft:
+In deze methode gaan we de P-waarde uitrekenen van de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen. Hiervoor moeten we eerst de t-waarde weer uitrekenen, welke uiteraard nog steeds dezelfde uitkomst heeft (omdat de gevonden waardes en het populatiegemiddelde niet wijzigen!):
 \begin{align}
 t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
 t=\frac{6.65-7}{\frac{2}{sqrt{200-1}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
-Vervolgens plaatsen we deze t-waarde in de figuur. Dit moet aan twee kanten gebeuren, omdat we, nogmaals, tweezijdig aan het toetsen zijn:
+Vervolgens plaatsen we deze t-waardes in de t-verdeling (figuur \ref{fig:TWEE_V1_P_TWAARDE}). Dit moet aan twee kanten gebeuren, omdat we, nogmaals, tweezijdig aan het toetsen zijn:
 
-<<"TWEE_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
+<<"TWEE_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
 # T.crit
 t.value <- (mean-mu)/(sd/sqrt(N-1))
 
@@ -250,7 +271,7 @@ polygonN1 <- polygonN[testK,]
 
 polygonN1_dat <- 
   data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
-             y=c(polygonN1$y, rep(0, times=length(polygonN1$x))))
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x))))
 
 testK <- polygonN$x > abs(t.value)
 
@@ -258,18 +279,71 @@ polygonN2 <- polygonN[testK,]
 
 polygonN2_dat <- 
   data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
-             y=c(polygonN2$y, rep(0, times=length(polygonN2$x))))
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x))))
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="blue") +
-  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="blue") +
-  geom_segment(x=t.value,xend=t.value,y=0,yend=density[which.min(abs(t.value-density$x)),"y"]) +
-  geom_segment(x=-t.value,xend=-t.value,y=0,yend=density[which.min(abs(-t.value-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="darkblue") +
+  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="darkblue") +
+  geom_segment(x=t.value,xend=t.value,y=-Inf,yend=density[which.min(abs(t.value-density$x)),"y"]) +
+  geom_segment(x=-t.value,xend=-t.value,y=-Inf,yend=density[which.min(abs(-t.value-density$x)),"y"]) +
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(-t.value,2), x = -t.value, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
-Vervolgens kunnen we een programma, zoals SPSS, de waardes van de blauwe gebiedjes laten uitrekenen. Aangezien SPSS precies figuur X uitrekend kunnen we de waardes van SPSS zonder problemen overnemen, omdat de waarde in SPSS (sig.) gelijk is aan de twee blauwe gebiedjes samen. In dit geval is \'e\'en blauw gebiedje \Sexpr{pt(-abs(t.value),N-1)} wat dus resulteert in een totaal gebied van \Sexpr{pt(-abs(t.value),N-1)*2}(wat dus de waarde is die in SPSS zou staan aangegeven), en aangezien deze p-waarde kleiner is dan de \textalpha (.05) verwerpen we de H\textsubscript{0}.
+Vervolgens kunnen we een programma, zoals SPSS, de waardes van de blauwe gebiedjes laten uitrekenen.\footnote{Deze blauwe gebieden geven dus de waarschijnlijkheid van de gevonde waarde (of nog extremer) als we ervan uitgaan dat de H\textsubscript{0} waar is.} Aangezien SPSS precies figuur (figuur \ref{fig:TWEE_V1_P_TWAARDE}) uitrekend kunnen we de waardes van SPSS zonder problemen overnemen, omdat de waarde in SPSS (sig.) gelijk is aan de twee blauwe gebiedjes samen (zie figuur \ref{fig:TWEE_V1_P_SPSS}). In dit geval is \'e\'en blauw gebiedje \Sexpr{pt(-abs(t.value),N-1)} wat dus resulteert in een totaal gebied van \Sexpr{pt(-abs(t.value),N-1)*2}(wat dus de waarde is die in SPSS zou staan aangegeven), en aangezien deze p-waarde kleiner is dan de \textalpha (.05) verwerpen we de H\textsubscript{0}.
+
+<<"TWEE_V1_P_SPSS", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
+# T.crit
+t.value <- (mean-mu)/(sd/sqrt(N-1))
+
+# P Value
+polygonN <- density
+
+testK <- polygonN$x < -abs(t.value)
+
+polygonN1 <- polygonN[testK,]
+
+polygonN1_dat <- 
+  data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x))))
+
+testK <- polygonN$x > abs(t.value)
+
+polygonN2 <- polygonN[testK,]
+
+polygonN2_dat <- 
+  data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x))))
+
+# Plot
+p <-
+ggplot(density,aes(x=x,y=y)) +
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="darkorange") +
+  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="darkorange") +
+  geom_segment(x=t.value,xend=t.value,y=-Inf,yend=density[which.min(abs(t.value-density$x)),"y"]) +
+  geom_segment(x=-t.value,xend=-t.value,y=-Inf,yend=density[which.min(abs(-t.value-density$x)),"y"]) +
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(-t.value,2), x = -t.value, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) +
+  annotate("text",x=min(density$x),y=max(density$y),label=paste("Sig.=",round(pt(-abs(t.value),N-1)*2,3)),vjust=1.5,size=8,hjust=-.25) 
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
+@
 
 \section{Eenzijdig toetsen}
 Als we eenzijdig toetsen ziet een hypothese er bijvoorbeeld als volgt uit
@@ -291,9 +365,10 @@ s = 2 \\
 N = 200
 \end{align}
 \subsubsection{Kritiek gebied}
-Om het de methode met het kritieke gebied te berekenen moet we eerst het volgende plaatje invullen:
+Om het de methode met het kritieke gebied te berekenen moet we eerst weer in een t-verdeling de locatie van de kritieke gebieden aangeven (figuur \ref{fig:ENKEL_V1_K_VRAAG}).
 
-<<"ENKEL_V1_K_VRAAG", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar het kritieke gebied zich bevind">>=
+<<"ENKEL_V1_K_VRAAG", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar het kritieke gebied zich bevind">>=
+
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
 
@@ -303,7 +378,7 @@ testK <- polygonP$x < t.crit
 polygonP <- polygonP[testK,]
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # H1
@@ -312,24 +387,32 @@ testK <- polygonN$x > t.crit
 polygonN <- polygonN[testK,]
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x)))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x)))
   )
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  annotate("text",label="T[crit]=='?'", x = t.crit, y = -Inf, vjust = 1.5,size=8,parse=TRUE) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
 
 
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
-Hierbij kijken we dus alleen aan de rechtse kant omdat de alternatieve hypothese alleen kijkt naar waardes die groter zijn (extremer zijn) dan de het gemiddelde, daar waar we bij tweezijdig ge\"intresseerd waren in beide extreme richtingen (zowel groter of kleiner dan het gemiddelde). Om deze t-waarde te vinden kunnen we weer naar de tabel kijken. Ditmaal moeten we echter kijken onder de kolom .95 (of .05 en vervolgens positief maken), omdat nu het rode gebied maar uit een enkel gebied bestaat. Dus dit gebied opzich moet al .05 van het oppervlak innemem. In dit geval is deze t-waarde \Sexpr{t.crit}. Vervolgens kunnen we deze t-waarde invullen:
+Hierbij kijken we dus alleen aan de rechtse kant omdat de alternatieve hypothese alleen kijkt naar waardes die groter zijn (extremer zijn) dan de het gemiddelde, daar waar we bij tweezijdig ge\"intresseerd waren in beide extreme richtingen (zowel groter of kleiner dan het gemiddelde). Om deze t-waarde te vinden kunnen we weer naar de tabel kijken. Ditmaal moeten we echter kijken onder de kolom .95 (of .05 en vervolgens positief maken), omdat nu het rode gebied maar uit een enkel gebied bestaat. Dus dit gebied opzich moet al .05 van het oppervlak innemem. In dit geval is deze kritieke t-waarde \Sexpr{t.crit}. Vervolgens kunnen we deze kritieke t-waarde invullen in figuur \ref{fig:ENKEL_V1_K_KWAARDE}.
 
-<<"ENKEL_V1_K_KWAARDE",echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Kritieke t-waarde invoegen (ontgonnen uit een tabel o.i.d.)">>=
-#T.crit
+<<"ENKEL_V1_K_KWAARDE",echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Kritieke t-waarde invoegen (ontgonnen uit een tabel o.i.d.)">>=
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
+
 
 # H0
 polygonP <- density
@@ -337,7 +420,7 @@ testK <- polygonP$x < t.crit
 polygonP <- polygonP[testK,]
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # H1
@@ -346,17 +429,24 @@ testK <- polygonN$x > t.crit
 polygonN <- polygonN[testK,]
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x)))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x)))
   )
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  annotate("text",label=round(t.crit,2), x = t.crit, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) 
 
-
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
 Nu moeten we alleen nog de t-waarde uitrekenen van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen. Deze heeft nog steeds dezelfde uitkomst (omdat de \emph{richting} van de hypotheses de t-waarde niet be\"invloeden)!
@@ -366,8 +456,8 @@ t=\frac{6.65-7}{\frac{2}{sqrt{200-1}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
-Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of de t-waarde wel of niet in het kritieke gebied valt:
-<<"ENKEL_V1_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
+Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of de t-waarde wel of niet in het kritieke gebied valt. Dit is gedaan in figuur \ref{fig:ENKEL_V1_K_TWAARDE}.
+<<"ENKEL_V1_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
 
@@ -378,7 +468,7 @@ testK <- polygonP$x < t.crit
 polygonP <- polygonP[testK,]
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # H1
@@ -387,27 +477,35 @@ testK <- polygonN$x > t.crit
 polygonN <- polygonN[testK,]
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x)))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x)))
   )
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) +
-  geom_vline(xintercept=t.value)
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  geom_vline(xintercept=t.value, lwd=1.5,lty=2) +
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(t.crit,2), x = t.crit, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) 
 
-
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
 NEE! De t-waarde valt niet in het kritieke gebied dus we houden H\textsubscript{0} aan.
 
 \subsubsection{p-waarde}
-Voor de p-waarde hebben we eerst de gevonden t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde nodig. Zoals reeds aangegeven, blijft deze in dit voorbeeld precies hetzelfde (\Sexpr{t.crit}).
-\textbf{Echter, nu het stuk waar het in de les even wat lastig werd en waar ik dus een te omslachtige methode gebruikte, wat uiteindelijk wel ophetzelfde neerkomt maar didactisch niet handig/correct is!}. Aangezien we bij een p-waarde altijd iets zegt over de waarschijnlijk van de gevonden waarde (of nog extremer) gegeven dat de H\textsubscript{0}, moeten we in dit geval naar het volgende gebied kijken:\footnote{p-value is the probability of obtaining a test statistic at least as extreme as the one that was actually observed} 
+Voor de p-waarde hebben we eerst de gevonden t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde nodig. Zoals reeds aangegeven, blijft deze in dit voorbeeld precies hetzelfde (dit hang dus niet af van welke methode je gebruikt), namelijk \Sexpr{t.crit}.
+\textbf{Echter, nu het stuk waar het in de les even wat lastig werd en waar ik dus een te omslachtige methode gebruikte, wat uiteindelijk wel ophetzelfde neerkomt maar didactisch niet handig/correct is!}. Aangezien we bij een p-waarde altijd iets zegt over de waarschijnlijk van de gevonden waarde (of nog extremer) gegeven dat de H\textsubscript{0}, moeten we in dit geval naar het volgende gebied kijken:\footnote{p-value is the probability of obtaining a test statistic at least as extreme as the one that was actually observed}. Dit ziet er dus uit zoals in figuur \ref{fig:ENKEL_V1_P_TWAARDE} is aangegeven.
 
-<<"ENKEL_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
+<<"ENKEL_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
 
 # T.crit
 t.value <- (mean-mu)/(sd/sqrt(N-1))
@@ -439,9 +537,9 @@ gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt) 
 @
 
-Dit is dus net iets anders dan ik de les aangaf, omdat je nu dus gewoon je gevonden t-waarde kan gebruiken (wat dus een stuk handiger werkt). De vraag blijft aleen of we moeten kijken naar wat links of rechts van deze gevonden t-waarde ligt. Zoals gezegd zegt de p-waarde iets over de gevonden waarde en alle extremere waardes t.o.v. van de H\textsubscript{0}, aangezien hier H\textsubscript{0} $\leq$ gebruikt wordt, zijn waardes die groter zijn dan de \textmu dus extreme scores (t.o.v. van de H\textsubscript{0}). Nu rest ons alleen de vraag nog hoe we die p-waarde kunnen berekenen. Daarvoor gaan we weer naar een programma als SPSS wat de volgende berekening maakt:
+Dit is dus net iets anders dan ik de les aangaf, omdat je nu dus gewoon je gevonden t-waarde kan gebruiken (wat dus een stuk handiger werkt). De vraag blijft aleen of we moeten kijken naar wat links of rechts van deze gevonden t-waarde ligt. Zoals gezegd zegt de p-waarde iets over de gevonden waarde en alle extremere waardes t.o.v. van de H\textsubscript{0}, aangezien hier H\textsubscript{0} $\leq$ gebruikt wordt, zijn waardes die groter zijn dan de \textmu dus extreme scores (t.o.v. van de H\textsubscript{0}). Je wilt dus als het ware steeds verder weg van je nulhypothese t.o.v. je gevonde waarde. Nu rest ons alleen de vraag nog hoe we die p-waarde kunnen berekenen. Daarvoor gaan we weer naar een programma als SPSS wat de volgende berekening maakt zoals aangegeven in figuur \ref{fig:ENKEL_V1_P_SPSS}.
 
-<<"ENKEL_V1_P_SPSS", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="SPSS-uitvoer voor gevonden t-waarde">>=
+<<"ENKEL_V1_P_SPSS", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="SPSS-uitvoer voor gevonden t-waarde">>=
 # T.crit
 t.value <- (mean-mu)/(sd/sqrt(N-1))
 
@@ -483,28 +581,28 @@ gt <- ggplot_gtable(ggplot_build(p))
 gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
-Zoals je ziet is een blauw gebied gelijk aan het ongekleurde gebied in het vorige plaatje. Daarom is het rode gebied in het vorige plaatje gelijk aan 
+Zoals je ziet is een enkele oranje gebied in figuur \ref{fig:ENKEL_V1_P_SPSS} gelijk aan het ongekleurde gebied in figuur \ref{fig:ENKEL_V1_P_TWAARDE}. Daarom is het blauwe gebied in figuur \ref{fig:ENKEL_V1_P_TWAARDE} gelijk aan: 
 $$
-rood gebied = 1 - (een enkel blauw gebiedje)
+blauw~gebied = 1 - (een~enkel~oranje~gebiedje)
 $$
-Aangezien SPSS alleen de waarde van de twee blauwe gebieden tesamen aangeeft (in dit geval \Sexpr{pt(t.value,N-1)*2}moet we de waarde die SPSS geeft door twee delen (Wat dus gelijke staat aan \Sexpr{pt(t.value,N-1)}. Nu kunnen we bovenstaand sommetje oplossen door de waarde voor een blauw gebied in te vullen 
+Aangezien SPSS alleen de waarde van de twee blauwe gebieden tesamen aangeeft (in dit geval \Sexpr{pt(t.value,N-1)*2}) moet we deze waarde die SPSS geeft door twee delen (Wat dus gelijke staat aan \Sexpr{pt(t.value,N-1)}. Nu kunnen we bovenstaand sommetje oplossen door de waarde voor een blauw gebied in te vullen 
 $$
-rood gebied = 1 - \Sexpr{pt(t.value,N-1)}
+blauw~gebied = 1 - \Sexpr{pt(t.value,N-1)}
 $$
 En aangezien het rode gebied gelijk is aan de waarschijnlijkheid van H\textsubscript{0} kunnen we dus concluderen dat we een p-waarde van \Sexpr{1-pt(t.value,N-1)} hebben gevonden, oftewel H\textsubscript{0} wordt aangenomen omdat: $p > \alpha$
 
 %%%%%%TWEEDE VOORBEELD
 \subsection{Voorbeeld 2}
-In dit voorbeeld gebruiken we dezelfde hypotheses als in het vorige voorbeeld alleen de gevonde waardes veranderen, nameljk in
+In dit voorbeeld gebruiken we dezelfde hypotheses als in het vorige voorbeeld alleen de gevonden waardes veranderen, namelijk in
 \begin{align}
 \bar{X} = 7.2 \\
 s = 1 \\
 N = 200
 \end{align}
 \subsubsection{Kritiek gebied}
-Om het de methode met het kritieke gebied te berekenen moet we eerst het volgende plaatje invullen:
+Om het de methode met het kritieke gebied te berekenen moet we eerst weer een t-verdeling schetsen (figuur \ref{fig:ENKEL_V2_K_KGEBIED}).
 
-<<"ENKEL_V2_K_KGEBIED", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar het kritieke gebied zich bevind.">>=
+<<"ENKEL_V2_K_KGEBIED", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar het kritieke gebied zich bevind.">>=
 mu = 7
 mean = 7.2
 sd = 1
@@ -548,9 +646,9 @@ gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
 
-Omdat het aantal personen in onze steekproef niet is veranderd en de hypothese ook gelijk is gebleven blijft de kritieke grenswaarde exact gelijk aan het vorige voorbeeld (er is hier slecht \'e\'en kritiek gebied omdat we nog steeds eenzijdig toetsen), dus we kunnen de waarde weer overnemen in het plaatje
+Omdat het aantal personen in onze steekproef niet is veranderd en de hypothese ook gelijk is gebleven blijft de kritieke grenswaarde exact gelijk aan het vorige voorbeeld (er is hier slecht \'e\'en kritiek gebied omdat we nog steeds eenzijdig toetsen), dus we kunnen de waarde weer overnemen in het figuur \ref{fig:ENKEL_V2_K_KWAARDE}.
 
-<<"ENKEL_V2_K_KWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+<<"ENKEL_V2_K_KWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Kritieke t-waardes invoegen (ontgonnen uit een tabel o.i.d.)">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
 
@@ -590,15 +688,15 @@ gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
 
-Het enige wat wel veranderd, en wat dus opnieuwe berekend moet worden, is de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Deze wordt als volgt berekend:
+Het enige wat wel veranderd, en wat dus opnieuw berekend moet worden, is de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Deze wordt als volgt berekend:
 \begin{align}
 t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
 t=\frac{7.2-7}{\frac{1}{sqrt{200-1}}}=\\
 t=\frac{0.2}{1/14.10}=\frac{0.2}{0.07}=2.85
 \end{align}
 
-Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of de t-waarde wel of niet in het kritieke gebied valt:
-<<"ENKEL_V2_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of de t-waarde wel of niet in het kritieke gebied valt, zie figuur \ref{fig:ENKEL_V2_K_TWAARDE}.
+<<"ENKEL_V2_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
 t.value <- (mean-mu)/(sd/sqrt(N-1))
@@ -642,12 +740,12 @@ gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
 
-JA! De t-waarde valt niet in het kritieke gebied dus we verwerpen H\textsubscript{0}.
+JA! De t-waarde valt in het kritieke gebied dus we verwerpen H\textsubscript{0}.
 
 \subsubsection{p-waarde}
-Nogmaals, omdat we bij een p-waarde altijd iets zegt over de waarschijnlijk van de gevonden waarde (of nog extremer) gegeven de H\textsubscript{0}, moeten we in dit geval naar het volgende gebied kijken:
+Nogmaals, omdat we bij een p-waarde altijd iets zegt over de waarschijnlijk van de gevonden waarde (of nog extremer) gegeven de H\textsubscript{0}, moeten we in dit geval naar het gebied kijken aangeven in figuur \ref{fig:ENKEL_V2_K_TWAARDE}.
 
-<<"ENKEL_V2_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+<<"ENKEL_V2_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
 # P Value right sided ------------------------------------------------------
 
 # T.crit
@@ -680,9 +778,9 @@ gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
 
-Omdat we nog steeds rechtszijdig aan het toetsen zijn moeten we dus kijken naar de waardes die groter zijn dan \textmu (aangezien hier H\textsubscript{0} $\leq$ gebruikt wordt). Nu rest ons alleen de vraag nog hoe we die p-waarde kunnen berekenen. Daarvoor gaan we naar een programma als SPSS welke de volgende berekening maakt:
+Omdat we nog steeds rechtszijdig aan het toetsen zijn moeten we dus kijken naar de waardes die groter zijn dan \textmu (aangezien hier H\textsubscript{0} $\leq$ gebruikt wordt), of in ieder geval verder weg gaan van alle waardes die gelijk of kleiner zijn aan \textmu. Nu rest ons alleen de vraag nog hoe we die p-waarde kunnen berekenen. Daarvoor gaan we naar een programma als SPSS welke de volgende berekening maakt (figuur \ref{fig:ENKEL_V2_P_SPSS})
 
-<<"ENKEL_V2_P_SPSS", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="SPSS-uitvoer voor gevonden t-waarde">>=
+<<"ENKEL_V2_P_SPSS", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="SPSS-uitvoer voor gevonden t-waarde">>=
 # T.crit
 t.value <- (mean-mu)/(sd/sqrt(N-1))
 
@@ -725,16 +823,14 @@ gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
 
-\textbf{Zoals je ziet is de berekening nu een beetje anders geworden}(omdat we nu wel aan de ''goede'' kant van de verdeling zitten). Het is nu iets eenvoudiger, nu is het rode gebied gelijk aan een enkel blauw gebiedje:
+\textbf{Zoals je ziet is de berekening nu een beetje anders geworden}(omdat we nu wel aan de ''goede'' kant van de verdeling zitten). Het is nu iets eenvoudiger, nu is het blauwe gebied gelijk aan \'e\'en enkel oranje gebiedje:
 $$
-rood gebied = een enkel blauw gebiedje
+blauw~gebied = een~enkel~oranje~gebiedje
 $$
-Aangezien SPSS nog steeds alleen de waarde van de twee blauwe gebieden samen aangeeft (in dit geval \Sexpr{pt(t.value,N-1)*2}moet we de waarde die SPSS geeft door twee delen (Wat dus gelijke staat aan \Sexpr{pt(t.value,N-1,lower.tail=FALSE)}. Nu kunnen we bovenstaand sommetje oplossen door de waarde voor een blauw gebied in te vullen 
+Aangezien SPSS nog steeds alleen de waarde van de twee blauwe gebieden samen aangeeft (in dit geval \Sexpr{pt(t.value,N-1)*2} moeten we de waarde die SPSS geeft door twee delen (Wat dus gelijke staat aan \Sexpr{pt(t.value,N-1,lower.tail=FALSE)}. Nu kunnen we bovenstaand sommetje oplossen door de waarde voor een blauw gebied in te vullen 
 $$
-rood gebied = \Sexpr{pt(t.value,N-1,lower.tail=FALSE)}
+blauw gebied = \Sexpr{pt(abs(t.value),N-1,lower.tail=FALSE)}
 $$
-En aangezien het rode gebied gelijk is aan de waarschijnlijkheid van H\textsubscript{0} kunnen we dus concluderen dat we een p-waarde van \Sexpr{1-pt(t.value,N-1)} hebben gevonden, oftewel H\textsubscript{0} wordt verworpen omdat: $p < \alpha$
-
-
+En aangezien het rode gebied gelijk is aan de waarschijnlijkheid van H\textsubscript{0} kunnen we dus concluderen dat we een p-waarde van \Sexpr{pt(abs(t.value),N-1,lower.tail=FALSE)} hebben gevonden, oftewel H\textsubscript{0} wordt verworpen omdat: $p < \alpha$
 
 \end{document}

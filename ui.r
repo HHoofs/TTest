@@ -9,7 +9,7 @@ shinyUI(pageWithSidebar(
 
   
   # Application title
-  headerPanel(" ~GZW1006 Experimenteren en interpreteren: Week 1",windowTitle="GettingThingsR"),
+  headerPanel(" ~GZW1006 Experimenteren en interpreteren: t-test",windowTitle="GettingThingsR"),
   
 
   # Sidebar with a slider input for number of points
@@ -37,8 +37,6 @@ shinyUI(pageWithSidebar(
       ),
   sliderInput("alpha","alpha",min=.001,max=1,value=.05,step=.001),
   selectInput("sided","Richting Hypothese",c("=","<",">")),
-  selectInput("method","Methode",c("Kritiek gebied","P-Waarde")),
-
   wellPanel(checkboxInput("ttest",strong("One Sample T-Test"),value=FALSE),
             conditionalPanel(condition = paste("input.ttest == true"),
                              sliderInput("one_u", "u",min=0, max=10, value=7, step=.1),
@@ -46,19 +44,10 @@ shinyUI(pageWithSidebar(
                              sliderInput("one_sd", "s",min=0, max=12, value=1, step=.1),
                              sliderInput("one_N", "N",min=0, max=2000, value=100, step=1)
                              )),
-  wellPanel(checkboxInput("refp",strong("Vergelijkingspunt"),value=FALSE),
-           conditionalPanel(condition = paste("input.refp == true"),  
-                             sliderInput("refferP", "",min=-20, max=20, value=0, step=.01),
-                            checkboxInput("difdens","Gespleten Verdeling",FALSE),
-                            checkboxInput("ztest","Verschil",FALSE),
-                                      conditionalPanel(condition= paste("input.ztest == true"),
-                                                       checkboxInput("labz","Z-Test",FALSE)
-                                                       )
-                                      )),
   wellPanel(checkboxInput("options",strong("Opties"),value=FALSE),
             conditionalPanel(condition = paste("input.options == true"),  
-                             sliderInput("lim", "Bereik",min=-20, max=20, value=c(-10,10), step=1),
-                             checkboxInput("plothist","Histogram",value=TRUE))),
+                             sliderInput("lim", "Bereik",min=0, max=20, value=5, step=1)
+                            )),
 
 
     HTML('<a href="http://www.maastrichtuniversity.nl/" target="_blank"><img src="logo.jpg" alt="Maastricht University"  border="0" style="border: #00A2DB solid 1px; border-radius: 5px;"/></a>')
@@ -71,14 +60,13 @@ shinyUI(pageWithSidebar(
       tags$style(type="text/css", "li a{color: #001C3D; font-weight:bold; background-color:white;}"),
       tags$style(type='text/css', '#version {font-family: Lucida Console;background-color:  white; color: :#001C3D;  font-size: 20px}'),
       tags$style(type='text/css', '#summar {font-family: Lucida Console;background-color:  white; color: :#001C3D;  font-size: 20px}'),
-      tags$style(type='text/css', '#quincunx {float: left;font-family: Lucida Console;background-color:  white; color: :#001C3D;  font-size: 0px}')
-
-      
-      
+      tags$style(type='text/css', '#quincunx {float: left;font-family: Lucida Console;background-color:  white; color: :#001C3D;  font-size: 0px}') 
       
     ),
       tabsetPanel(selected="Bord van Galton",
-        tabPanel("Figuur",plotOutput("plot",width="800px",heigh="600px")),
+        tabPanel("Kritieke gebied",plotOutput("plot",width="800px",height="600px"),plotOutput("plotH",width="800px",height="300px")),
+        tabPanel("p-waarde",plotOutput("plot2",width="800px",height="600px"),plotOutput("plot3",width="800px",height="300px")),
+        
         tabPanel("Overzicht",verbatimTextOutput("summar")),
         tabPanel("Version (C)",verbatimTextOutput("version"))
 #     verbatimTextOutput("summary")
