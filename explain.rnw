@@ -408,7 +408,6 @@ Voor de p-waarde hebben we eerst de gevonden t-waarde van het steekproefgemiddel
 \textbf{Echter, nu het stuk waar het in de les even wat lastig werd en waar ik dus een te omslachtige methode gebruikte, wat uiteindelijk wel ophetzelfde neerkomt maar didactisch niet handig/correct is!}. Aangezien we bij een p-waarde altijd iets zegt over de waarschijnlijk van de gevonden waarde (of nog extremer) gegeven dat de H\textsubscript{0}, moeten we in dit geval naar het volgende gebied kijken:\footnote{p-value is the probability of obtaining a test statistic at least as extreme as the one that was actually observed} 
 
 <<"ENKEL_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
-# P Value right sided ------------------------------------------------------
 
 # T.crit
 t.value <- (mean-mu)/(sd/sqrt(N-1))
@@ -422,13 +421,22 @@ polygonN <- polygonN[testK,]
 
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x))))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x))))
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_segment(x=t.value,xend=t.value,y=0,yend=density[which.min(abs(t.value-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkblue") +
+  geom_segment(x=t.value,xend=t.value,y=-Inf,yend=density[which.min(abs(t.value-density$x)),"y"],lwd=1.5) +
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) +
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt) 
 @
 
 Dit is dus net iets anders dan ik de les aangaf, omdat je nu dus gewoon je gevonden t-waarde kan gebruiken (wat dus een stuk handiger werkt). De vraag blijft aleen of we moeten kijken naar wat links of rechts van deze gevonden t-waarde ligt. Zoals gezegd zegt de p-waarde iets over de gevonden waarde en alle extremere waardes t.o.v. van de H\textsubscript{0}, aangezien hier H\textsubscript{0} $\leq$ gebruikt wordt, zijn waardes die groter zijn dan de \textmu dus extreme scores (t.o.v. van de H\textsubscript{0}). Nu rest ons alleen de vraag nog hoe we die p-waarde kunnen berekenen. Daarvoor gaan we weer naar een programma als SPSS wat de volgende berekening maakt:
@@ -446,7 +454,7 @@ polygonN1 <- polygonN[testK,]
 
 polygonN1_dat <- 
   data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
-             y=c(polygonN1$y, rep(0, times=length(polygonN1$x))))
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x))))
 
 testK <- polygonN$x > abs(t.value)
 
@@ -454,15 +462,26 @@ polygonN2 <- polygonN[testK,]
 
 polygonN2_dat <- 
   data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
-             y=c(polygonN2$y, rep(0, times=length(polygonN2$x))))
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x))))
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.4, fill="red") +
-  geom_segment(x=t.value,xend=t.value,y=0,yend=density[which.min(abs(t.value-density$x)),"y"]) +
-  geom_segment(x=-t.value,xend=-t.value,y=0,yend=density[which.min(abs(-t.value-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.6, fill="darkorange") +
+  geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.6, fill="darkorange") +
+  geom_segment(x=t.value,xend=t.value,y=-Inf,yend=density[which.min(abs(t.value-density$x)),"y"],lwd=1.5) +
+  geom_segment(x=-t.value,xend=-t.value,y=-Inf,yend=density[which.min(abs(-t.value-density$x)),"y"],lwd=1.5) +
+  annotate("text",label=round(-t.value,2), x = -t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",x=min(density$x),y=max(density$y),label=paste("Sig.=",round(pt(-abs(t.value),N-1)*2,3)),vjust=1.5,size=8,hjust=-.25) +
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 Zoals je ziet is een blauw gebied gelijk aan het ongekleurde gebied in het vorige plaatje. Daarom is het rode gebied in het vorige plaatje gelijk aan 
 $$
@@ -474,7 +493,7 @@ rood gebied = 1 - \Sexpr{pt(t.value,N-1)}
 $$
 En aangezien het rode gebied gelijk is aan de waarschijnlijkheid van H\textsubscript{0} kunnen we dus concluderen dat we een p-waarde van \Sexpr{1-pt(t.value,N-1)} hebben gevonden, oftewel H\textsubscript{0} wordt aangenomen omdat: $p > \alpha$
 
-%%%%%%DERDE VOORBEELD
+%%%%%%TWEEDE VOORBEELD
 \subsection{Voorbeeld 2}
 In dit voorbeeld gebruiken we dezelfde hypotheses als in het vorige voorbeeld alleen de gevonde waardes veranderen, nameljk in
 \begin{align}
@@ -485,12 +504,11 @@ N = 200
 \subsubsection{Kritiek gebied}
 Om het de methode met het kritieke gebied te berekenen moet we eerst het volgende plaatje invullen:
 
-<<echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+<<"ENKEL_V2_K_KGEBIED", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Indicatie waar het kritieke gebied zich bevind.">>=
 mu = 7
 mean = 7.2
 sd = 1
 
-
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
 
@@ -500,7 +518,7 @@ testK <- polygonP$x < t.crit
 polygonP <- polygonP[testK,]
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # H1
@@ -509,22 +527,30 @@ testK <- polygonN$x > t.crit
 polygonN <- polygonN[testK,]
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x)))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x)))
   )
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  annotate("text",label="T[crit]=='?'", x = t.crit, y = -Inf, vjust = 1.5,size=8,parse=TRUE) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
 
 
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
-Omdat het aantal personen in onze steekproef niet is veranderd blijft de kritieke waarde exact gelijk aan het vorige voorbeeld (er is hier slecht een kritieke waarde omdat we nog steeds eenzijdig toetsen), dus we kunnen de waarde weer overnemen in het plaatje
+Omdat het aantal personen in onze steekproef niet is veranderd en de hypothese ook gelijk is gebleven blijft de kritieke grenswaarde exact gelijk aan het vorige voorbeeld (er is hier slecht \'e\'en kritiek gebied omdat we nog steeds eenzijdig toetsen), dus we kunnen de waarde weer overnemen in het plaatje
 
-<<echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+<<"ENKEL_V2_K_KWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
 
@@ -534,7 +560,7 @@ testK <- polygonP$x < t.crit
 polygonP <- polygonP[testK,]
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # H1
@@ -543,17 +569,25 @@ testK <- polygonN$x > t.crit
 polygonN <- polygonN[testK,]
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x)))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x)))
   )
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  annotate("text",label=round(t.crit,2), x = t.crit, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
 
 
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
 Het enige wat wel veranderd, en wat dus opnieuwe berekend moet worden, is de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Deze wordt als volgt berekend:
@@ -564,9 +598,10 @@ t=\frac{0.2}{1/14.10}=\frac{0.2}{0.07}=2.85
 \end{align}
 
 Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of de t-waarde wel of niet in het kritieke gebied valt:
-<<echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+<<"ENKEL_V2_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
+t.value <- (mean-mu)/(sd/sqrt(N-1))
 
 
 # H0
@@ -575,7 +610,7 @@ testK <- polygonP$x < t.crit
 polygonP <- polygonP[testK,]
 polygonP_dat <- 
   data.frame(x=c(polygonP$x, rev(polygonP$x)), 
-             y=c(polygonP$y, rep(0, times=length(polygonP$x)))
+             y=c(polygonP$y, rep(-(max(density$y)/20), times=length(polygonP$x)))
   )
 
 # H1
@@ -584,18 +619,27 @@ testK <- polygonN$x > t.crit
 polygonN <- polygonN[testK,]
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x)))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x)))
   )
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="green") +
-  geom_segment(x=t.crit,xend=t.crit,y=0,yend=density[which.min(abs(t.crit-density$x)),"y"]) +
-  geom_vline(xintercept=t.value)
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkred") +
+  geom_polygon(aes(x=x,y=y),data=polygonP_dat,alpha=.4, fill="darkgreen") +
+  geom_segment(x=t.crit,xend=t.crit,y=-Inf,yend=density[which.min(abs(t.crit-density$x)),"y"],lwd=1.5) +
+  geom_vline(xintercept=t.value, lwd=1.5,lty=2) +
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(t.crit,2), x = t.crit, y = -Inf, vjust = 1.5,size=8) + 
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))  
 
 
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
 JA! De t-waarde valt niet in het kritieke gebied dus we verwerpen H\textsubscript{0}.
@@ -603,7 +647,7 @@ JA! De t-waarde valt niet in het kritieke gebied dus we verwerpen H\textsubscrip
 \subsubsection{p-waarde}
 Nogmaals, omdat we bij een p-waarde altijd iets zegt over de waarschijnlijk van de gevonden waarde (of nog extremer) gegeven de H\textsubscript{0}, moeten we in dit geval naar het volgende gebied kijken:
 
-<<echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
+<<"ENKEL_V2_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6.5, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Verdeling van de compleetheid in percentages voor alle variabelen.">>=
 # P Value right sided ------------------------------------------------------
 
 # T.crit
@@ -618,13 +662,22 @@ polygonN <- polygonN[testK,]
 
 polygonN_dat <- 
   data.frame(x=c(polygonN$x, rev(polygonN$x)), 
-             y=c(polygonN$y, rep(0, times=length(polygonN$x))))
+             y=c(polygonN$y, rep(-(max(density$y)/20), times=length(polygonN$x))))
 
 # Plot
+p <-
 ggplot(density,aes(x=x,y=y)) +
-  geom_line() + 
-  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="red") +
-  geom_segment(x=t.value,xend=t.value,y=0,yend=density[which.min(abs(t.value-density$x)),"y"]) 
+  geom_line(lwd=1.5) + 
+  geom_polygon(aes(x=x,y=y),data=polygonN_dat,alpha=.4, fill="darkblue") +
+  geom_segment(x=t.value,xend=t.value,y=-Inf,yend=density[which.min(abs(t.value-density$x)),"y"],lwd=1.5) +
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) +
+  theme_bw(20) +
+  theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
+
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+grid.draw(gt)
 @
 
 Omdat we nog steeds rechtszijdig aan het toetsen zijn moeten we dus kijken naar de waardes die groter zijn dan \textmu (aangezien hier H\textsubscript{0} $\leq$ gebruikt wordt). Nu rest ons alleen de vraag nog hoe we die p-waarde kunnen berekenen. Daarvoor gaan we naar een programma als SPSS welke de volgende berekening maakt:
@@ -642,7 +695,7 @@ polygonN1 <- polygonN[testK,]
 
 polygonN1_dat <- 
   data.frame(x=c(polygonN1$x, rev(polygonN1$x)), 
-             y=c(polygonN1$y, rep(0, times=length(polygonN1$x))))
+             y=c(polygonN1$y, rep(-(max(density$y)/20), times=length(polygonN1$x))))
 
 testK <- polygonN$x > abs(t.value)
 
@@ -650,7 +703,7 @@ polygonN2 <- polygonN[testK,]
 
 polygonN2_dat <- 
   data.frame(x=c(polygonN2$x, rev(polygonN2$x)), 
-             y=c(polygonN2$y, rep(0, times=length(polygonN2$x))))
+             y=c(polygonN2$y, rep(-(max(density$y)/20), times=length(polygonN2$x))))
 
 # Plot
 p <-
@@ -658,12 +711,14 @@ ggplot(density,aes(x=x,y=y)) +
   geom_line(lwd=1.5) + 
   geom_polygon(aes(x=x,y=y),data=polygonN2_dat,alpha=.6, fill="darkorange") +
   geom_polygon(aes(x=x,y=y),data=polygonN1_dat,alpha=.6, fill="darkorange") +
-  geom_segment(x=t.value,xend=t.value,y=0,yend=density[which.min(abs(t.value-density$x)),"y"],lwd=1.5) +
-  geom_segment(x=-t.value,xend=-t.value,y=0,yend=density[which.min(abs(-t.value-density$x)),"y"],lwd=1.5) +
-  annotate("text",label=round(-t.value,2), x = -t.value, y = -Inf, vjust = 1.5,size=8) + annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + annotate("text",x=min(density$x),y=max(density$y),label=paste("Sig.=",round(pt(t.value,N-1,lower.tail=FALSE)*2,3)),vjust=1.5,size=8,hjust=-.25) +
+  geom_segment(x=t.value,xend=t.value,y=-Inf,yend=density[which.min(abs(t.value-density$x)),"y"],lwd=1.5) +
+  geom_segment(x=-t.value,xend=-t.value,y=-Inf,yend=density[which.min(abs(-t.value-density$x)),"y"],lwd=1.5) +
+  annotate("text",label=round(-t.value,2), x = -t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",label=round(t.value,2), x = t.value, y = -Inf, vjust = 1.5,size=8) + 
+  annotate("text",x=min(density$x),y=max(density$y),label=paste("Sig.=",round(pt(-abs(t.value),N-1)*2,3)),vjust=1.5,size=8,hjust=-.25) +
   theme_bw(20) +
   theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
-  scale_x_continuous(breaks=0,name="t") + scale_y_continuous(expand=c(0,0))
+  scale_x_continuous(breaks=0,name="t",expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
 
 gt <- ggplot_gtable(ggplot_build(p))
 gt$layout$clip[gt$layout$name == "panel"] <- "off"
