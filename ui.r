@@ -35,7 +35,8 @@ shinyUI(pageWithSidebar(
         
         
       ),
-  sliderInput("alpha","alpha",min=.001,max=1,value=.05,step=.001),
+#   sliderInput("alpha","alpha",min=.001,max=1,value=.05,step=.001),
+  selectInput("alpha","alpha",c(.001,.01,.05,.1)),
   selectInput("sided","Richting Hypothese",c("=","<",">")),
   wellPanel(checkboxInput("ttest",strong("One Sample T-Test"),value=FALSE),
             conditionalPanel(condition = paste("input.ttest == true"),
@@ -64,8 +65,9 @@ shinyUI(pageWithSidebar(
       
     ),
       tabsetPanel(selected="Bord van Galton",
-        tabPanel("Kritieke gebied",plotOutput("plot",width="800px",height="600px"),plotOutput("plotH",width="800px",height="300px")),
+        tabPanel("Kritieke gebied",plotOutput("hypopaar",width="800px",height="50px"),plotOutput("plot",width="800px",height="600px"),plotOutput("plotH",width="800px",height="300px")),
         tabPanel("p-waarde",plotOutput("plot2",width="800px",height="600px"),plotOutput("plot3",width="800px",height="300px")),
+        tabPanel("Betrouwbaarheids Interval",plotOutput("CI",width="800px",height="600px")),
         
         tabPanel("Overzicht",verbatimTextOutput("summar")),
         tabPanel("Version (C)",verbatimTextOutput("version"))
