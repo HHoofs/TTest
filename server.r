@@ -208,22 +208,20 @@ shinyServer(function(input, output) {
     if(input$sided == "="){
       p <-
         p +
-        geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=1, fill="#E84E10") +
-        geom_polygon(aes(x=x,y=y),data=polygL(),alpha=1, fill="#001C3D") +
-        geom_polygon(aes(x=x,y=y),data=polygR(),alpha=1, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=.8, fill="#E84E10") +
+        geom_polygon(aes(x=x,y=y),data=polygL(),alpha=.8, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=polygR(),alpha=.8, fill="#001C3D") +
         geom_segment(x=-t.cr,xend=-t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
         geom_segment(x=t.cr,xend=t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
         annotate("text",label=paste("t[krit]==",round(t.cr,2)), x = t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE) +
         annotate("text",label=paste("t[krit]==",round(-t.cr,2)), x = -t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE) 
-      
-      
     }
     
     if(input$sided == "<"){
       p <-
         p +
-        geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=1, fill="#E84E10") +
-        geom_polygon(aes(x=x,y=y),data=polygL(),alpha=1, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=.8, fill="#E84E10") +
+        geom_polygon(aes(x=x,y=y),data=polygL(),alpha=.8, fill="#001C3D") +
         geom_segment(x=-t.cr,xend=-t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
         annotate("text",label=paste("t[krit]==",round(-t.cr,2)), x = -t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE)     
     }
@@ -231,8 +229,8 @@ shinyServer(function(input, output) {
     if(input$sided == ">"){
       p <-
         p +
-        geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=1, fill="#E84E10") +
-        geom_polygon(aes(x=x,y=y),data=polygR(),alpha=1, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=.8, fill="#E84E10") +
+        geom_polygon(aes(x=x,y=y),data=polygR(),alpha=.8, fill="#001C3D") +
         geom_segment(x=t.cr,xend=t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
         annotate("text",label=paste("t[krit]==",round(t.cr,2)), x = t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE)    
     }
@@ -255,7 +253,8 @@ shinyServer(function(input, output) {
     p <- 
       p + 
       geom_vline(xintercept=par_x, lwd=1.5,lty="longdash") +
-      annotate("text",label=par_lab, x =  par_x, y = max(densit()$y)/2, hjust = par_hjust, size=8,parse=TRUE)
+      annotate("text",label=par_lab, x =  par_x, y = max(densit()$y)/2, hjust = par_hjust, size=8,parse=TRUE) +
+      geom_line(lwd=2)
     
     p <- 
       p +   
@@ -312,8 +311,8 @@ shinyServer(function(input, output) {
     if(input$sided == "="){
       p <-
         p +
-        geom_polygon(aes(x=x,y=y),data=polygProp(), alpha=1, fill="#001C3D") +
-        geom_polygon(aes(x=x,y=y),data=data.frame(x=-polygProp()$x,y=polygProp()$y), alpha=1, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=polygProp(), alpha=.8, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=data.frame(x=-polygProp()$x,y=polygProp()$y), alpha=.8, fill="#001C3D") +
         geom_segment(x=par_x[1], xend=par_x[1], y=-Inf,yend=densit()[which.min(abs(par_x[1]-densit()$x)), "y"], lwd=1.5) +
         geom_segment(x=par_x[2], xend=par_x[2], y=-Inf,yend=densit()[which.min(abs(par_x[2]-densit()$x)),"y"], lwd=1.5) +
         annotate("text",label=par_lab[1], x = par_x[1], y = -Inf, vjust = 1.5,size=8,parse=TRUE, hjust= par_hjust[1]) +
@@ -321,13 +320,13 @@ shinyServer(function(input, output) {
     } else {
       p <-
         p +
-        geom_polygon(aes(x=x,y=y),data=polygProp(), alpha=1, fill="#001C3D") +
+        geom_polygon(aes(x=x,y=y),data=polygProp(), alpha=.8, fill="#001C3D") +
         geom_segment(x=par_x[1], xend=par_x[1], y=-Inf,yend=densit()[which.min(abs(par_x[1]-densit()$x)), "y"], lwd=1.5) +
         annotate("text",label=par_lab[1], x = par_x[1], y = -Inf, vjust = 1.5,size=8,parse=TRUE, hjust= par_hjust[1]) 
     }
     
     p <- 
-      p +   
+      p + geom_line(lwd=2) +   
       theme_bw(20) +
       ggtitle("t-verdeling") +
       theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
@@ -387,8 +386,8 @@ shinyServer(function(input, output) {
     p <-
       ggplot(densit(),aes(x=x,y=y)) +
       geom_line(lwd=1.5) +
-      geom_polygon(aes(x=x,y=y),data=polygSpss(), alpha=1, fill="#001C3D") +
-      geom_polygon(aes(x=x,y=y),data=data.frame(x=-polygSpss()$x,y=polygSpss()$y), alpha=1, fill="#001C3D") +
+      geom_polygon(aes(x=x,y=y),data=polygSpss(), alpha=.8, fill="#001C3D") +
+      geom_polygon(aes(x=x,y=y),data=data.frame(x=-polygSpss()$x,y=polygSpss()$y), alpha=.8, fill="#001C3D") +
       geom_segment(x=par_x[1], xend=par_x[1], y=-Inf,yend=densit()[which.min(abs(par_x[1]-densit()$x)), "y"], lwd=1.5) +
       geom_segment(x=par_x[2], xend=par_x[2], y=-Inf,yend=densit()[which.min(abs(par_x[2]-densit()$x)),"y"], lwd=1.5) +
       annotate("text",label=par_lab[1], x = par_x[1], y = -Inf, vjust = 1.5,size=4,parse=TRUE, hjust= par_hjust[1]) +
@@ -396,7 +395,7 @@ shinyServer(function(input, output) {
       annotate("text",x=min(densit()$x),y=max(densit()$y),label=paste("Sig.=",round(pt(-abs(t.value()),df())*2,3)),vjust=1.5,size=4,hjust=-.25) 
         
     p <- 
-      p +   
+      p + geom_line(lwd=2) +
       theme_bw(10) +
       ggtitle("SPSS") +
       theme(axis.text.y = element_blank(),axis.title.y=element_blank()) +
@@ -752,13 +751,14 @@ shinyServer(function(input, output) {
     
     VI <- ttable
     VI <- round(ttable,3)
-#     VI[df == as.numeric(critdf()),values[1]] <- paste("HENK", VI[df==critdf(),values[1]])
-#     VI[critdf(),values[1]] <- paste("HENK", VI[critdf(),values[1]])
-
+    VI[rownames(ttable) == critdf(),values[1]] <- paste("@@", VI[rownames(ttable) == critdf(),values[1]])
+    if(input$sided == "=") VI[rownames(ttable) == critdf(),values[1]+values[2]+1] <- paste("@@", VI[rownames(ttable) == critdf(),values[1]+values[2]+1])
     VI <- capture.output(print(xtable(VI),"HTML"))
     VI[3] <- paste(VI[3],schema_kleur)
     wehre <- which(str_detect(string=VI, paste('<TD align=\"right\">',critdf(),'</TD>')))
     VI[wehre] <- gsub("<TR>","<tr bgcolor='white'>",VI[wehre])
+    VI <- gsub("@@","<b>",VI)
+    VI <- gsub("<TR> <TH>  </TH> <TH>","<TR> <TH> df\\\\p </TH> <TH>",VI)
     VI
   })
   
