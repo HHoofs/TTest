@@ -37,9 +37,9 @@ shinyServer(function(input, output) {
     if(input$ttest){
       t.val <- (input$one_X-input$one_u)/(input$one_sd/sqrt(input$one_N))
     }
-#     if(input$twottest){
-#       t.val <- (input$two_X1 - input$two_X2)/sqrt( (input$two_X1^2))
-#     }
+    if(input$twottest){
+      t.val <- (input$two_X1 - input$two_X2)/sqrt( (input$two_sd1^2)/input$two_N1 + (input$two_sd2^2)/input$two_N2)
+    }
     t.val
   })
   
@@ -49,31 +49,55 @@ shinyServer(function(input, output) {
       if(input$sided == "<") value <- qt(p=as.numeric(input$alpha), input$one_N-1)
       if(input$sided == ">") value <- qt(p=as.numeric(input$alpha), input$one_N-1, lower.tail=FALSE)
     }
+    if(input$twottest){
+      if(input$sided == "=") value <- qt(p=as.numeric(input$alpha)/2, input$two_N1 + input$two_N2 -2)
+      if(input$sided == "<") value <- qt(p=as.numeric(input$alpha), input$two_N1 + input$two_N2 -2)
+      if(input$sided == ">") value <- qt(p=as.numeric(input$alpha), input$two_N1 + input$two_N2 -2, lower.tail=FALSE)
+    }
     value
   })
   
   critdf <- reactive({
-    if(input$one_N - 1 >= 200) value <- "z"
-    if(input$one_N - 1 < 200) value <- 100
-    if(input$one_N - 1 < 100) value <- 80
-    if(input$one_N - 1 < 80)  value <- 60
-    if(input$one_N - 1 < 60) value <-  50
-    if(input$one_N - 1 < 50) value <-  40
-    if(input$one_N - 1 < 40) value <-  30
-    if(input$one_N - 1 < 30) value <- input$one_N - 1
+    if(input$ttest){
+      if(input$one_N - 1 >= 200) value <- "z"
+      if(input$one_N - 1 < 200) value <- 100
+      if(input$one_N - 1 < 100) value <- 80
+      if(input$one_N - 1 < 80)  value <- 60
+      if(input$one_N - 1 < 60) value <-  50
+      if(input$one_N - 1 < 50) value <-  40
+      if(input$one_N - 1 < 40) value <-  30
+      if(input$one_N - 1 < 30) value <- input$one_N - 1
+    }
+    if(input$twottest){
+      if(input$two_N1 + input$two_N2 -2 >= 200) value <- "z"
+      if(input$two_N1 + input$two_N2 -2 < 200) value <- 100
+      if(input$two_N1 + input$two_N2 -2 < 100) value <- 80
+      if(input$two_N1 + input$two_N2 -2 < 80)  value <- 60
+      if(input$two_N1 + input$two_N2 -2 < 60) value <-  50
+      if(input$two_N1 + input$two_N2 -2 < 50) value <-  40
+      if(input$two_N1 + input$two_N2 -2 < 40) value <-  30
+      if(input$two_N1 + input$two_N2 -2 < 30) value <- input$two_N1 + input$two_N2 -2
+    }
     value
+  })
+  
+  df <- reactive({
+    if(input$ttest) valdf <- input$one_N-1
+    if(input$twottest) valdf <-  input$two_N1 + input$two_N2 -2
+    valdf
+    
   })
   
   densit <- reactive({
     rangeX <- c(-input$lim,input$lim)
     xx <- seq(rangeX[1],rangeX[2],length.out=1000)
-    data.frame(x=xx, y=dt(x=xx, df=(input$one_N-1)))
+    data.frame(x=xx, y=dt(x=xx, df=df()))
   })
   
   pval <- reactive({
-    if(input$sided == "=") pvalue <- pt(-abs(t.value()), input$one_N-1)*2
-    if(input$sided == "<") pvalue <- pt(t.value(), input$one_N-1) 
-    if(input$sided == ">") pvalue <- pt(t.value(), input$one_N-1,lower.tail =FALSE) 
+    if(input$sided == "=") pvalue <- pt(-abs(t.value()), df())*2
+    if(input$sided == "<") pvalue <- pt(t.value(), df()) 
+    if(input$sided == ">") pvalue <- pt(t.value(), df(),lower.tail =FALSE) 
     pvalue
   })
   
@@ -366,7 +390,7 @@ shinyServer(function(input, output) {
       geom_segment(x=par_x[2], xend=par_x[2], y=-Inf,yend=densit()[which.min(abs(par_x[2]-densit()$x)),"y"], lwd=1.5) +
       annotate("text",label=par_lab[1], x = par_x[1], y = -Inf, vjust = 1.5,size=4,parse=TRUE, hjust= par_hjust[1]) +
       annotate("text",label=par_lab[2], x = par_x[2], y = -Inf, vjust = 1.5,size=4,parse=TRUE, hjust= par_hjust[2]) +
-      annotate("text",x=min(densit()$x),y=max(densit()$y),label=paste("Sig.=",round(pt(-abs(t.value()),input$one_N-1)*2,3)),vjust=1.5,size=4,hjust=-.25) 
+      annotate("text",x=min(densit()$x),y=max(densit()$y),label=paste("Sig.=",round(pt(-abs(t.value()),df())*2,3)),vjust=1.5,size=4,hjust=-.25) 
     
     
     p <- 
@@ -407,24 +431,50 @@ shinyServer(function(input, output) {
   
   output$CI <- renderPlot({
     
-    Xval <- input$one_X
-    Tval <- abs(t.crit()*(input$one_sd/sqrt(input$one_N)))
-    se <- data.frame(y="",x=Xval, xlow=Xval - Tval, xhigh=Xval +Tval)
-    p <- ggplot(se, aes(x=y, y=x, ymin = xlow, ymax=xhigh)) +  
-      geom_pointrange(lwd=1.5) +
-      geom_errorbar(width = 0.5, lwd = 1.5)  + 
-      geom_hline(yintercept=input$one_u) + 
-      annotate("text",y=se$xlow,  x=.7,label=round(se$xlow,2)) +
-      annotate("text",y=se$xhigh, x=.7,label=round(se$xhigh,2)) +
-      annotate("text",y=se$x, x=.95,label=round(se$x,2)) +
-      scale_y_continuous(breaks=input$one_u, labels=list(bquote(mu == .(input$one_u))),name="") + scale_x_discrete(name="")
+    if(input$ttest){
+      Xval <- input$one_X
+      Tval <- abs(t.crit()*(input$one_sd/sqrt(input$one_N)))
+      se <- data.frame(y="",x=Xval, xlow=Xval - Tval, xhigh=Xval +Tval)
+      p <- ggplot(se, aes(x=y, y=x, ymin = xlow, ymax=xhigh)) +  
+        geom_pointrange(lwd=1.5) +
+        geom_errorbar(width = 0.5, lwd = 1.5)  + 
+        geom_hline(yintercept=input$one_u) + 
+        annotate("text",y=se$xlow,  x=.7,label=round(se$xlow,2)) +
+        annotate("text",y=se$xhigh, x=.7,label=round(se$xhigh,2)) +
+        annotate("text",y=se$x, x=.95,label=round(se$x,2)) +
+        scale_y_continuous(breaks=input$one_u, labels=list(bquote(mu == .(input$one_u))),name="") + scale_x_discrete(name="")
+      
+      p <- p + 
+        ggtitle("Betrouwbaarheids Interval") +
+        theme_bw(20)  +
+        coord_flip()
+      
+      print(p)
+    }
     
-    p <- p + 
-      ggtitle("Betrouwbaarheids Interval") +
-      theme_bw(20)  +
-      coord_flip()
     
-    print(p)
+    if(input$twottest){
+      lowX <- input$two_X1 - input$two_X2 - (abs(t.crit())* sqrt(((input$two_sd1^2)/input$two_N1) +((input$two_sd1^2)/input$two_N1)))
+      highX<- input$two_X1 - input$two_X2 + (abs(t.crit())* sqrt(((input$two_sd1^2)/input$two_N1) +((input$two_sd1^2)/input$two_N1)))
+      Xval <- input$two_X1 - input$two_X2
+      
+      se <- data.frame(y="",x=Xval, xlow=lowX, xhigh=highX)
+      p <- ggplot(se, aes(x=y, y=x, ymin = xlow, ymax=xhigh)) +  
+        geom_pointrange(lwd=1.5) +
+        geom_errorbar(width = 0.5, lwd = 1.5)  + 
+        geom_hline(yintercept=0) + 
+        annotate("text",y=se$xlow,  x=.7,label=round(se$xlow,2)) +
+        annotate("text",y=se$xhigh, x=.7,label=round(se$xhigh,2)) +
+        annotate("text",y=se$x, x=.95,label=round(se$x,2)) +
+        scale_y_continuous(breaks=0, labels=list(bquote(t == 0)),name="") + scale_x_discrete(name="")
+      
+      p <- p + 
+        ggtitle("Betrouwbaarheids Interval") +
+        theme_bw(20)  +
+        coord_flip()  
+      
+      print(p)
+    }
     
     if(input$sided != "="){
       plot.new()
@@ -433,40 +483,75 @@ shinyServer(function(input, output) {
   })
   
   output$CI_info <- renderPlot({
-    gl <- grid.layout(nrow=1, ncol=2)
-    vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1) 
-    vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
-    
-    # init layout
-    pushViewport(viewport(layout=gl))
-    # access the first position
-    pushViewport(vp.1)    
-    grid.text(bquote(group("(",list(
-      bar(X)-t[list(alpha/2,N-1)]*frac(s,sqrt(N-1)),
-      bar(X)+t[list(alpha/2,N-1)]*frac(s,sqrt(N-1))
-    ),")")),
-    gp=gpar(fontsize=20),vjust=-2)
-    
-    grid.text(bquote(group("(",list(
-      .(input$one_X)-.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N))),
-      .(input$one_X)+.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N))) 
-    ),")")),
-    gp=gpar(fontsize=20))
-    
-    grid.text(bquote(group("(",list(
-      .(round(input$one_X-abs(t.crit())*(input$one_sd/sqrt(input$one_N)),2) ),
-      .(round(input$one_X+abs(t.crit())*(input$one_sd/sqrt(input$one_N)),2) )
-    ),")")),
-    gp=gpar(fontsize=20),vjust=4)
-    
-    
-    popViewport()
-    
-    pushViewport(vp.2)
-    grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
-    if(input$answ2){
-      if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
+    if(input$ttest){
+      gl <- grid.layout(nrow=1, ncol=2)
+      vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1) 
+      vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
+      
+      # init layout
+      pushViewport(viewport(layout=gl))
+      # access the first position
+      pushViewport(vp.1)    
+      grid.text(bquote(group("(",list(
+        bar(X)-t[list(alpha/2,N-1)]*frac(s,sqrt(N)),
+        bar(X)+t[list(alpha/2,N-1)]*frac(s,sqrt(N))
+      ),")")),
+      gp=gpar(fontsize=20),vjust=-2)
+      
+      grid.text(bquote(group("(",list(
+        .(input$one_X)-.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N))),
+        .(input$one_X)+.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N))) 
+      ),")")),
+      gp=gpar(fontsize=20))
+      
+      grid.text(bquote(group("(",list(
+        .(round(input$one_X-abs(t.crit())*(input$one_sd/sqrt(input$one_N)),2) ),
+        .(round(input$one_X+abs(t.crit())*(input$one_sd/sqrt(input$one_N)),2) )
+      ),")")),
+      gp=gpar(fontsize=20),vjust=4)
+      
+      
+      popViewport()
+      
+      pushViewport(vp.2)
+      grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
+      if(input$answ2){
+        if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
+      }
     }
+    
+    if(input$twottest){
+      gl <- grid.layout(nrow=1, ncol=2)
+      vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1) 
+      vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
+      
+      # init layout
+      pushViewport(viewport(layout=gl))
+      # access the first position
+      pushViewport(vp.1)    
+      grid.text(bquote(bar(X)[1]-bar(X)[2]%+-%t[list(alpha/2,df)]*sqrt(frac(s[1]^2,N[1])+frac(s[2]^2,N[2]))),
+                gp=gpar(fontsize=20),vjust=-1.5)
+      
+      grid.text(bquote(.(input$two_X1 - input$two_X2)%+-%.(round(abs(t.crit()),2))%*% sqrt(.(round((input$two_sd1^2)/input$two_N1,3))+.(round((input$two_sd2^2)/input$two_N2,3)))),
+                gp=gpar(fontsize=20))
+      
+      grid.text(bquote(group("(",list(
+        .(round(input$two_X1 - input$two_X2 - (abs(t.crit())* sqrt(((input$two_sd1^2)/input$two_N1) +((input$two_sd1^2)/input$two_N1))),2)),
+        .(round(input$two_X1 - input$two_X2 + (abs(t.crit())* sqrt(((input$two_sd1^2)/input$two_N1) +((input$two_sd1^2)/input$two_N1))),2))
+      ),")")),
+      gp=gpar(fontsize=20),vjust=4)
+      
+      
+      popViewport()
+      
+      pushViewport(vp.2)
+      grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
+      if(input$answ2){
+        if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
+      }
+    }
+    
+    
     
     if(input$sided != "="){
       plot.new()
@@ -474,74 +559,151 @@ shinyServer(function(input, output) {
   })
   
   output$hypopaar <- renderPlot({
-    plot.new() 
-    
-    # setup layout
-    gl <- grid.layout(nrow=6, ncol=2)
-    # grid.show.layout(gl)
-    
-    # setup viewports
-    vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1)
-    vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
-    vp.3 <- viewport(layout.pos.col=1, layout.pos.row=2) 
-    vp.4 <- viewport(layout.pos.col=1, layout.pos.row=3) 
-    vp.5 <- viewport(layout.pos.col=1, layout.pos.row=4) 
-    vp.6 <- viewport(layout.pos.col=1, layout.pos.row=5) 
-    vp.7 <- viewport(layout.pos.col=1, layout.pos.row=6) 
-    vp.8 <- viewport(layout.pos.col=2, layout.pos.row=3:6) 
-    
-    
-    
-    
-    # init layout
-    pushViewport(viewport(layout=gl))
-    # access the first position
-    # done with the first viewport
-    if(input$sided == "="){
-      pushViewport(vp.1)  
-      grid.text(bquote('H'[0]: mu==.(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+    if(input$ttest){
+      plot.new() 
+      
+      # setup layout
+      gl <- grid.layout(nrow=6, ncol=2)
+      # grid.show.layout(gl)
+      
+      # setup viewports
+      vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1)
+      vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
+      vp.3 <- viewport(layout.pos.col=1, layout.pos.row=2) 
+      vp.4 <- viewport(layout.pos.col=1, layout.pos.row=3) 
+      vp.5 <- viewport(layout.pos.col=1, layout.pos.row=4) 
+      vp.6 <- viewport(layout.pos.col=1, layout.pos.row=5) 
+      vp.7 <- viewport(layout.pos.col=1, layout.pos.row=6) 
+      vp.8 <- viewport(layout.pos.col=2, layout.pos.row=3:6) 
+      
+      # init layout
+      pushViewport(viewport(layout=gl))
+      # access the first position
+      # done with the first viewport
+      if(input$sided == "="){
+        pushViewport(vp.1)  
+        grid.text(bquote('H'[0]: mu==.(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+        pushViewport(vp.2)      
+        grid.text(bquote('H'[1]: mu != .(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+      }
+      if(input$sided == "<"){
+        pushViewport(vp.1)  
+        grid.text(bquote('H'[0]: mu>=.(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+        pushViewport(vp.2)     
+        grid.text(bquote('H'[1]: mu < .(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+      }
+      if(input$sided == ">"){
+        pushViewport(vp.1)  
+        grid.text(bquote('H'[0]: mu<=.(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+        pushViewport(vp.2)    
+        grid.text(bquote('H'[1]: mu > .(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+      }
+      
+      pushViewport(vp.3)    
+      grid.text(bquote(alpha == .(as.numeric(input$alpha))), gp=gpar(fontsize=40), hjust=1)
       popViewport()
-      pushViewport(vp.2)      
-      grid.text(bquote('H'[1]: mu != .(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+      pushViewport(vp.4)    
+      grid.text(bquote(mu == .(as.numeric(input$one_u))), gp=gpar(fontsize=40), hjust=1)
       popViewport()
-    }
-    if(input$sided == "<"){
-      pushViewport(vp.1)  
-      grid.text(bquote('H'[0]: mu>=.(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+      pushViewport(vp.5)    
+      grid.text(bquote(bar(X) == .(as.numeric(input$one_X))), gp=gpar(fontsize=40), hjust=1)
       popViewport()
-      pushViewport(vp.2)     
-      grid.text(bquote('H'[1]: mu < .(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+      pushViewport(vp.6)    
+      grid.text(bquote(s == .(as.numeric(input$one_sd))), gp=gpar(fontsize=40), hjust=1)
       popViewport()
-    }
-    if(input$sided == ">"){
-      pushViewport(vp.1)  
-      grid.text(bquote('H'[0]: mu<=.(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+      pushViewport(vp.7)    
+      grid.text(bquote(N == .(as.numeric(input$one_N))), gp=gpar(fontsize=40), hjust=1)
       popViewport()
-      pushViewport(vp.2)    
-      grid.text(bquote('H'[1]: mu > .(input$one_u)), gp=gpar(fontsize=40), hjust=1)
+      pushViewport(vp.8)    
+      grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N)) )} == .(round(t.value(),2))), 
+                gp=gpar(fontsize=40))
+      popViewport()}
+    if(input$twottest){
+      plot.new() 
+      
+      # setup layout
+      gl <- grid.layout(nrow=6, ncol=3)
+      # grid.show.layout(gl)
+      
+      # setup viewports
+      vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1)
+      vp.2 <- viewport(layout.pos.col=3, layout.pos.row=1)
+      
+      vp.3 <- viewport(layout.pos.col=1, layout.pos.row=2)
+      
+      vp.4 <- viewport(layout.pos.col=1, layout.pos.row=3) 
+      vp.5 <- viewport(layout.pos.col=1, layout.pos.row=4) 
+      vp.6 <- viewport(layout.pos.col=1, layout.pos.row=5) 
+      
+      vp.7 <- viewport(layout.pos.col=2, layout.pos.row=3) 
+      vp.8 <- viewport(layout.pos.col=2, layout.pos.row=4) 
+      vp.9 <- viewport(layout.pos.col=2, layout.pos.row=5) 
+      
+      vp.10 <- viewport(layout.pos.col=1:2, layout.pos.row=6) 
+      
+      # init layout
+      pushViewport(viewport(layout=gl))
+      # access the first position
+      # done with the first viewport
+      if(input$sided == "="){
+        pushViewport(vp.1)  
+        grid.text(bquote('H'[0]: mu[1]==mu[2]), gp=gpar(fontsize=40), hjust=0)
+        popViewport()
+        pushViewport(vp.2)      
+        grid.text(bquote('H'[1]:  mu[1] !=  mu[2]), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+      }
+      if(input$sided == "<"){
+        pushViewport(vp.1)  
+        grid.text(bquote('H'[0]:  mu[1]>= mu[2]), gp=gpar(fontsize=40), hjust=0)
+        popViewport()
+        pushViewport(vp.2)     
+        grid.text(bquote('H'[1]:  mu[1] <  mu[2]), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+      }
+      if(input$sided == ">"){
+        pushViewport(vp.1)  
+        grid.text(bquote('H'[0]:  mu[1]<= mu[2]), gp=gpar(fontsize=40), hjust=0)
+        popViewport()
+        pushViewport(vp.2)    
+        grid.text(bquote('H'[1]:  mu[1] >  mu[2]), gp=gpar(fontsize=40), hjust=1)
+        popViewport()
+      }
+      
+      pushViewport(vp.3)    
+      grid.text(bquote(alpha == .(as.numeric(input$alpha))), gp=gpar(fontsize=40), hjust=0)
       popViewport()
-    }
-    
-    pushViewport(vp.3)    
-    grid.text(bquote(alpha == .(as.numeric(input$alpha))), gp=gpar(fontsize=40), hjust=1)
-    popViewport()
-    pushViewport(vp.4)    
-    grid.text(bquote(mu == .(as.numeric(input$one_u))), gp=gpar(fontsize=40), hjust=1)
-    popViewport()
-    pushViewport(vp.5)    
-    grid.text(bquote(bar(X) == .(as.numeric(input$one_X))), gp=gpar(fontsize=40), hjust=1)
-    popViewport()
-    pushViewport(vp.6)    
-    grid.text(bquote(s == .(as.numeric(input$one_sd))), gp=gpar(fontsize=40), hjust=1)
-    popViewport()
-    pushViewport(vp.7)    
-    grid.text(bquote(N == .(as.numeric(input$one_N))), gp=gpar(fontsize=40), hjust=1)
-    popViewport()
-    pushViewport(vp.8)    
-    grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N)) )} == .(round(t.value(),2))), 
-              gp=gpar(fontsize=40))
-    popViewport()
-    
+      
+      pushViewport(vp.4)    
+      grid.text(bquote(bar(X)[1] == .(as.numeric(input$two_X1))), gp=gpar(fontsize=40), hjust=0)
+      popViewport()
+      pushViewport(vp.5)    
+      grid.text(bquote(s[1] == .(as.numeric(input$two_sd1))), gp=gpar(fontsize=40), hjust=0)
+      popViewport()
+      pushViewport(vp.6)    
+      grid.text(bquote(N[1] == .(as.numeric(input$two_N1))), gp=gpar(fontsize=40), hjust=0)
+      popViewport()
+      
+      pushViewport(vp.7)    
+      grid.text(bquote(bar(X)[2] == .(as.numeric(input$two_X2))), gp=gpar(fontsize=40), hjust=0)
+      popViewport()
+      pushViewport(vp.8)    
+      grid.text(bquote(s[2] == .(as.numeric(input$two_sd2))), gp=gpar(fontsize=40), hjust=0)
+      popViewport()
+      pushViewport(vp.9)    
+      grid.text(bquote(N[2] == .(as.numeric(input$two_N2))), gp=gpar(fontsize=40), hjust=0)
+      popViewport()
+      
+      pushViewport(vp.10)    
+      grid.text(bquote({t[w] == frac( .(input$two_X1) - .(input$two_X2),sqrt(frac(.(input$two_sd1)^2,.(input$two_N1))+frac(.(input$two_sd2)^2,.(input$two_N2))))} == .(round(t.value(),2))), 
+                gp=gpar(fontsize=40))
+      popViewport()}
   })
   
   

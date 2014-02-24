@@ -43,21 +43,21 @@ shinyUI(pageWithSidebar(
                                # Groepsgrootte
                                sliderInput("one_N", "N (steekproefgrootte)",min=0, max=2000, value=42, step=1)
               )),
-#     wellPanel(checkboxInput("twottest",strong("t-toets voor twee steekproeven"),value=FALSE),
-#               conditionalPanel(condition = paste("input.twottest == true"),
-#                                # Steekproefgemiddelde
-#                                sliderInput("two_X1", "X1 (gemiddelde groep 1)",min=0, max=10, value=6.9, step=.1),
-#                                # Standaard deviatie
-#                                sliderInput("two_sd1", "s1 (standaard deviatie groep 1)",min=0, max=12, value=1, step=.1),
-#                                # Groepsgrootte
-#                                sliderInput("two_N1", "N (steekproefgrootte groep 1)",min=0, max=2000, value=42, step=1),
-#                                # Steekproefgemiddelde
-#                                sliderInput("two_X2", "X1 (gemiddelde groep 2)",min=0, max=10, value=6.9, step=.1),
-#                                # Standaard deviatie
-#                                sliderInput("two_sd2", "s1 (standaard deviatie groep 2)",min=0, max=12, value=1, step=.1),
-#                                # Groepsgrootte
-#                                sliderInput("two_N2", "N (steekproefgrootte groep 2)",min=0, max=2000, value=42, step=1)
-#               )),
+    wellPanel(checkboxInput("twottest",strong("t-toets voor twee steekproeven"),value=FALSE),
+              conditionalPanel(condition = paste("input.twottest == true"),
+                               # Steekproefgemiddelde
+                               sliderInput("two_X1", "X1 (gemiddelde groep 1)",min=0, max=10, value=6.9, step=.1),
+                               # Standaard deviatie
+                               sliderInput("two_sd1", "s1 (standaard deviatie groep 1)",min=0, max=12, value=1, step=.1),
+                               # Groepsgrootte
+                               sliderInput("two_N1", "N (steekproefgrootte groep 1)",min=0, max=2000, value=42, step=1),
+                               # Steekproefgemiddelde
+                               sliderInput("two_X2", "X1 (gemiddelde groep 2)",min=0, max=10, value=6.9, step=.1),
+                               # Standaard deviatie
+                               sliderInput("two_sd2", "s1 (standaard deviatie groep 2)",min=0, max=12, value=1, step=.1),
+                               # Groepsgrootte
+                               sliderInput("two_N2", "N (steekproefgrootte groep 2)",min=0, max=2000, value=42, step=1)
+              )),
     # Opties
     wellPanel(checkboxInput("options",strong("Opties"),value=TRUE),
               conditionalPanel(condition = paste("input.options == true"),
@@ -80,15 +80,15 @@ shinyUI(pageWithSidebar(
     # Verschillende tabPanels
     tabsetPanel(
       tabPanel("Info",HTML("<P STYLE='background-color: white;'>Deze applicatie laat de drie methodes zien waarmee je kan toetsen of een gevonden steekproefgemiddelde overeenkomt
-met het populatiegemiddelde (gegeven de hypotheses). Het tabblad 'waardes' geeft alle relevante informatie en berekend
+met het populatiegemiddelde (gegeven de hypotheses) of dat twee steekproefgemiddelde uit dezelfde populatie komen. Het tabblad 'waardes' geeft alle relevante informatie en berekend
 de t-waarde. Propeer deze t-waarde ook een paar keer zelf te berekenen en controleer of het klopt. De volgende drie
 tabbladen laten de drie methodes zien waarmee je kan bepalden welke hypothese je moet aannemen dan wel verwerpen. Probeer
 eerst zelf te bedenken welke hypothese je aanneemt en druk vervolgens op conclusie (onder opties), om te controleren of dit
 correct is. Het laatste tabblad ('t-tabel') laat zien in welke rijen en welke kolom je moet kijken in de tabel op pagina 306
 van Imbos et al. Aan de linkse kant kan je de waardes veranderen, de alpha en de richting van de nulhypothese (en dus ook de
 alternatieve). Veel succes en probeer alle verschillende methodes eens uit en kijk (of je weet) wat er gebeurd als je
-waardes veranderd.</P>")),
-      tabPanel("Waardes",plotOutput("hypopaar",width="800px",height="600px")),           
+waardes veranderd. </P>")),
+      tabPanel("Waardes",plotOutput("hypopaar",width="800px",height="700px")),           
       tabPanel("Kritieke gebied",plotOutput("plot",width="800px",height="600px"),plotOutput("plotH",width="800px",height="300px")),
       tabPanel("p-waarde",plotOutput("plot2",width="800px",height="600px"),plotOutput("plot3",width="800px",height="300px")),
       tabPanel("Betrouwbaarheids Interval",plotOutput("CI",width="800px",height="600px"),plotOutput("CI_info",width="800px",height="300px")), 
