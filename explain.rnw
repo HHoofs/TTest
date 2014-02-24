@@ -168,8 +168,8 @@ grid.draw(gt)
 
 Tot slot moeten we de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen en kijken hoe deze t-waarde zich verhoudt tot de kritieke gebieden:
 \begin{align}
-t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{6.65-7}{\frac{2}{\sqrt{200-1}}}=\\
+t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N}}}= \\
+t=\frac{6.65-7}{\frac{2}{\sqrt{200}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
@@ -183,7 +183,7 @@ mean = 6.65
 sd = 2
 
 t.crit <- qt(p=alpha/2, N-1)
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 
 rangeX <- c(-5,5)
@@ -254,8 +254,8 @@ Aangezien onze gevonde t-waarde dus in het kritieke (rode) gebied ligt, verwerpe
 \subsubsection{P-Waarde}
 In deze methode gaan we de P-waarde uitrekenen van de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Hiervoor moeten we eerst de t-waarde weer uitrekenen, welke uiteraard nog steeds dezelfde uitkomst heeft (omdat de gevonden waardes en het populatiegemiddelde niet wijzigen!):
 \begin{align}
-t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{6.65-7}{\frac{2}{\sqrt{200-1}}}=\\
+t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N}}}= \\
+t=\frac{6.65-7}{\frac{2}{\sqrt{200}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
@@ -263,7 +263,7 @@ Vervolgens plaatsen we deze t-waardes in de t-verdeling (figuur \ref{fig:TWEE_V1
 
 <<"TWEE_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
 # T.crit
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 # P Value
 polygonN <- density
@@ -307,7 +307,7 @@ Vervolgens kunnen we een programma, zoals SPSS, de waardes van de blauwe gebiedj
 
 <<"TWEE_V1_P_SPSS", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
 # T.crit
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 # P Value
 polygonN <- density
@@ -454,8 +454,8 @@ grid.draw(gt)
 
 Nu moeten we alleen nog de t-waarde uitrekenen van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen. Deze heeft nog steeds dezelfde uitkomst (omdat de \emph{richting} van de hypotheses de t-waarde niet be\"invloeden)!
 \begin{align}
-t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{6.65-7}{\frac{2}{\sqrt{200-1}}}=\\
+t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N}}}= \\
+t=\frac{6.65-7}{\frac{2}{\sqrt{200}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
@@ -511,7 +511,7 @@ Voor de p-waarde hebben we eerst de gevonden t-waarde van het steekproefgemiddel
 <<"ENKEL_V1_P_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Plaatsing t-waardes in figuur en markering van waarschijnlijkheid">>=
 
 # T.crit
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 # P Value
 polygonN <- density
@@ -544,7 +544,7 @@ Dit is dus net iets anders dan ik de les aangaf, omdat je nu dus gewoon je gevon
 
 <<"ENKEL_V1_P_SPSS", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="SPSS-uitvoer voor gevonden t-waarde">>=
 # T.crit
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 # P Value
 polygonN <- density
@@ -694,8 +694,8 @@ grid.draw(gt)
 
 Het enige wat wel veranderd, en wat dus opnieuw berekend moet worden, is de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Deze wordt als volgt berekend:
 \begin{align}
-t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{7.2-7}{\frac{1}{\sqrt{200-1}}}=\\
+t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N}}}= \\
+t=\frac{7.2-7}{\frac{1}{\sqrt{200}}}=\\
 t=\frac{0.2}{1/14.10}=\frac{0.2}{0.07}=2.85
 \end{align}
 
@@ -704,7 +704,7 @@ Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of 
 <<"ENKEL_V2_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 
 # H0
@@ -754,7 +754,7 @@ Nogmaals, omdat we bij een p-waarde altijd iets zegt over de waarschijnlijk van 
 # P Value right sided ------------------------------------------------------
 
 # T.crit
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 # P Value
 polygonN <- density
@@ -787,7 +787,7 @@ Omdat we nog steeds rechtszijdig aan het toetsen zijn moeten we dus kijken naar 
 
 <<"ENKEL_V2_P_SPSS", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="SPSS-uitvoer voor gevonden t-waarde">>=
 # T.crit
-t.value <- (mean-mu)/(sd/sqrt(N-1))
+t.value <- (mean-mu)/(sd/sqrt(N))
 
 # P Value
 polygonN <- density

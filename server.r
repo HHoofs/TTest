@@ -35,8 +35,11 @@ shinyServer(function(input, output) {
   
   t.value <- reactive({
     if(input$ttest){
-      t.val <- (input$one_X-input$one_u)/(input$one_sd/sqrt(input$one_N/1))
+      t.val <- (input$one_X-input$one_u)/(input$one_sd/sqrt(input$one_N))
     }
+#     if(input$twottest){
+#       t.val <- (input$two_X1 - input$two_X2)/sqrt( (input$two_X1^2))
+#     }
     t.val
   })
   
@@ -68,9 +71,9 @@ shinyServer(function(input, output) {
   })
   
   pval <- reactive({
-    if(input$sided == "=") pvalue <- pt(-abs(t.value()), input$one_N)*2
-    if(input$sided == "<") pvalue <- pt(t.value(), input$one_N) 
-    if(input$sided == ">") pvalue <- pt(t.value(), input$one_N,lower.tail =FALSE) 
+    if(input$sided == "=") pvalue <- pt(-abs(t.value()), input$one_N-1)*2
+    if(input$sided == "<") pvalue <- pt(t.value(), input$one_N-1) 
+    if(input$sided == ">") pvalue <- pt(t.value(), input$one_N-1,lower.tail =FALSE) 
     pvalue
   })
   
@@ -403,8 +406,9 @@ shinyServer(function(input, output) {
   })
   
   output$CI <- renderPlot({
+    
     Xval <- input$one_X
-    Tval <- abs(t.crit()*(input$one_sd/sqrt(input$one_N-1)))
+    Tval <- abs(t.crit()*(input$one_sd/sqrt(input$one_N)))
     se <- data.frame(y="",x=Xval, xlow=Xval - Tval, xhigh=Xval +Tval)
     p <- ggplot(se, aes(x=y, y=x, ymin = xlow, ymax=xhigh)) +  
       geom_pointrange(lwd=1.5) +
@@ -421,6 +425,11 @@ shinyServer(function(input, output) {
       coord_flip()
     
     print(p)
+    
+    if(input$sided != "="){
+      plot.new()
+      grid.text("Niet mogelijk bij eenzijdig toetsen", gp=gpar(fontsize=40))
+    }
   })
   
   output$CI_info <- renderPlot({
@@ -439,22 +448,28 @@ shinyServer(function(input, output) {
     gp=gpar(fontsize=20),vjust=-2)
     
     grid.text(bquote(group("(",list(
-      .(input$one_X)-.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N)-1)),
-      .(input$one_X)+.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N)-1)) 
+      .(input$one_X)-.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N))),
+      .(input$one_X)+.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N))) 
     ),")")),
     gp=gpar(fontsize=20))
     
     grid.text(bquote(group("(",list(
-      .(round(input$one_X-abs(t.crit())*(input$one_sd/sqrt(input$one_N-1)),2) ),
-      .(round(input$one_X+abs(t.crit())*(input$one_sd/sqrt(input$one_N-1)),2) )
+      .(round(input$one_X-abs(t.crit())*(input$one_sd/sqrt(input$one_N)),2) ),
+      .(round(input$one_X+abs(t.crit())*(input$one_sd/sqrt(input$one_N)),2) )
     ),")")),
     gp=gpar(fontsize=20),vjust=4)
+    
+    
     popViewport()
     
     pushViewport(vp.2)
     grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
     if(input$answ2){
       if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
+    }
+    
+    if(input$sided != "="){
+      plot.new()
     }
   })
   
@@ -523,7 +538,7 @@ shinyServer(function(input, output) {
     grid.text(bquote(N == .(as.numeric(input$one_N))), gp=gpar(fontsize=40), hjust=1)
     popViewport()
     pushViewport(vp.8)    
-    grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N) - 1) )} == .(round(t.value(),2))), 
+    grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N)) )} == .(round(t.value(),2))), 
               gp=gpar(fontsize=40))
     popViewport()
     
@@ -541,37 +556,37 @@ shinyServer(function(input, output) {
       if(input$sided == "<") values <- c(2,11)
       if(input$sided == ">") values <- c(12,1)
     }
-      
+    
     if(as.numeric(input$alpha)==.05){
       values <- c(3,7,2) 
       if(input$sided == "<") values <- c(4,9)
       if(input$sided == ">") values <- c(10,3)
     }
-
-   if(as.numeric(input$alpha)==.1){
+    
+    if(as.numeric(input$alpha)==.1){
       values <- c(4,5,3) 
       if(input$sided == "<") values <- c(5,8)
       if(input$sided == ">") values <- c(9,4)
     }
-   
-   if(length(values) == 2) {
-     schema_kleur <-
-     paste('<colgroup>  <col span="',values[1],
-            '" ><col span="1" style="background-color:white">
+    
+    if(length(values) == 2) {
+      schema_kleur <-
+        paste('<colgroup>  <col span="',values[1],
+              '" ><col span="1" style="background-color:white">
             <col span="',values[2],'" >
     <col span="1" style="background-color:white">
     </colgroup>')
-   }
-
+    }
+    
     if(length(values) == 3) {
-     schema_kleur <-
-     paste('<colgroup>  <col span="',values[1],
-            '" ><col span="1" style="background-color:white">
+      schema_kleur <-
+        paste('<colgroup>  <col span="',values[1],
+              '" ><col span="1" style="background-color:white">
             <col span="',values[2],'" >
             <col span="1" style="background-color:white"><col span="',values[3],'" >
             </colgroup>')
-   }
-
+    }
+    
     
     VI <- ttable
     VI <- capture.output(print(xtable(VI,digits=3),"HTML"))
@@ -581,24 +596,24 @@ shinyServer(function(input, output) {
     VI
   })
   
-output$valuett <- renderPlot({
+  output$valuett <- renderPlot({
     grid.text(bquote(t[krit] %~~% .(round(t.crit(),2))), gp=gpar(fontsize=40), hjust=1)
     if(input$sided=="=")  grid.text(bquote(t[krit] %~~% .(round(-t.crit(),2))), gp=gpar(fontsize=40), hjust=-.25)
-
-})
+    
+  })
   
-
-
+  
+  
   output$version <- renderPrint({
     sessionInfo()
-    })
-
+  })
+  
   output$author <- renderPrint({
     "Author: Huub Hoofs"
-    })
-
+  })
+  
   output$licence <- renderPrint({
-cat("
+    cat("
 The MIT License (MIT)
 
 Copyright (c) 2014 Huub

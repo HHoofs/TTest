@@ -43,6 +43,21 @@ shinyUI(pageWithSidebar(
                                # Groepsgrootte
                                sliderInput("one_N", "N (steekproefgrootte)",min=0, max=2000, value=42, step=1)
               )),
+#     wellPanel(checkboxInput("twottest",strong("t-toets voor twee steekproeven"),value=FALSE),
+#               conditionalPanel(condition = paste("input.twottest == true"),
+#                                # Steekproefgemiddelde
+#                                sliderInput("two_X1", "X1 (gemiddelde groep 1)",min=0, max=10, value=6.9, step=.1),
+#                                # Standaard deviatie
+#                                sliderInput("two_sd1", "s1 (standaard deviatie groep 1)",min=0, max=12, value=1, step=.1),
+#                                # Groepsgrootte
+#                                sliderInput("two_N1", "N (steekproefgrootte groep 1)",min=0, max=2000, value=42, step=1),
+#                                # Steekproefgemiddelde
+#                                sliderInput("two_X2", "X1 (gemiddelde groep 2)",min=0, max=10, value=6.9, step=.1),
+#                                # Standaard deviatie
+#                                sliderInput("two_sd2", "s1 (standaard deviatie groep 2)",min=0, max=12, value=1, step=.1),
+#                                # Groepsgrootte
+#                                sliderInput("two_N2", "N (steekproefgrootte groep 2)",min=0, max=2000, value=42, step=1)
+#               )),
     # Opties
     wellPanel(checkboxInput("options",strong("Opties"),value=TRUE),
               conditionalPanel(condition = paste("input.options == true"),
@@ -79,6 +94,6 @@ waardes veranderd.</P>")),
       tabPanel("Betrouwbaarheids Interval",plotOutput("CI",width="800px",height="600px"),plotOutput("CI_info",width="800px",height="300px")), 
       tabPanel("T Tabel",tableOutput("dataset"),plotOutput("valuett",width="600px",height="200px")),
       tabPanel("Version (C)",verbatimTextOutput("version"),verbatimTextOutput("author"),verbatimTextOutput("licence"))
-
+      
     )
   )))
