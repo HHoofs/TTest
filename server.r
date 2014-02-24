@@ -1,14 +1,7 @@
-require(MASS)
-require(psych)
-# library(Hmisc)
-# require(reshape)
-# require(ggplot2)
 library(grid)
-# library(gridExtra)
-# require(ggthemes)
 library(ggplot2)
-# require(rgl)
-# require(stringr)
+require(xtable)
+require(stringr)
 
 gsub2 <- function(pattern, replacement, x, ...) {
   for(i in 1:length(pattern))
@@ -26,6 +19,18 @@ color2 <- function(x){
   y
 }
 
+levels <- c(.005,.01,.025,.05,.1,.25,.5,.75,.9,.95,.975,.99,.995)
+df     <- c(1:30,40,50,60,80,100,10000)
+ttable <- matrix(nrow=length(df),ncol=length(levels))
+for(i in 1:length(levels)){
+  ttable[,i] <- qt(levels[i],df)
+  if(levels[i]==.5) ttable[,i] <- 0
+}
+ttable <- data.frame(ttable)
+rownames(ttable) <- df
+rownames(ttable)[length(df)] <- "z"
+colnames(ttable) <- levels
+
 shinyServer(function(input, output) {
   
   t.value <- reactive({
@@ -41,6 +46,18 @@ shinyServer(function(input, output) {
       if(input$sided == "<") value <- qt(p=as.numeric(input$alpha), input$one_N-1)
       if(input$sided == ">") value <- qt(p=as.numeric(input$alpha), input$one_N-1, lower.tail=FALSE)
     }
+    value
+  })
+  
+  critdf <- reactive({
+    if(input$one_N - 1 >= 200) value <- "z"
+    if(input$one_N - 1 < 200) value <- 100
+    if(input$one_N - 1 < 100) value <- 80
+    if(input$one_N - 1 < 80)  value <- 60
+    if(input$one_N - 1 < 60) value <-  50
+    if(input$one_N - 1 < 50) value <-  40
+    if(input$one_N - 1 < 40) value <-  30
+    if(input$one_N - 1 < 30) value <- input$one_N - 1
     value
   })
   
@@ -148,8 +165,8 @@ shinyServer(function(input, output) {
         geom_polygon(aes(x=x,y=y),data=polygR(),alpha=.4, fill="darkred") +
         geom_segment(x=-t.cr,xend=-t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
         geom_segment(x=t.cr,xend=t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
-        annotate("text",label=paste("T[krit]==",round(t.cr,2)), x = t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE) +
-        annotate("text",label=paste("T[krit]==",round(-t.cr,2)), x = -t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE) 
+        annotate("text",label=paste("t[krit]==",round(t.cr,2)), x = t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE) +
+        annotate("text",label=paste("t[krit]==",round(-t.cr,2)), x = -t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE) 
       
       
     }
@@ -160,7 +177,7 @@ shinyServer(function(input, output) {
         geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=.4, fill="darkgreen") +
         geom_polygon(aes(x=x,y=y),data=polygL(),alpha=.4, fill="darkred") +
         geom_segment(x=-t.cr,xend=-t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
-        annotate("text",label=paste("T[krit]==",round(-t.cr,2)), x = -t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE)     
+        annotate("text",label=paste("t[krit]==",round(-t.cr,2)), x = -t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE)     
     }
     
     
@@ -170,22 +187,22 @@ shinyServer(function(input, output) {
         geom_polygon(aes(x=x,y=y),data=polygH0(),alpha=.4, fill="darkgreen") +
         geom_polygon(aes(x=x,y=y),data=polygR(),alpha=.4, fill="darkred") +
         geom_segment(x=t.cr,xend=t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1.5) +
-        annotate("text",label=paste("T[krit]==",round(t.cr,2)), x = t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE)    
+        annotate("text",label=paste("t[krit]==",round(t.cr,2)), x = t.cr , y = -Inf, vjust = 1.5,size=8,parse=TRUE)    
     }
     
     # Adjust t value placement if it cross the border!
     if(t.value() < 0) par_hjust <- 0 else par_hjust <- 1
     
     par_x   <- t.value() 
-    par_lab <- paste("T[w]==",round(t.value(),2))  
+    par_lab <- paste("~t[w]==",round(t.value(),2))  
     
     if(t.value() <  min(densit()$x)) {
       par_x   <- min(densit()$x) 
-      par_lab <- paste("{phantom(0)%<-%T[w]}==",round(t.value(),2))}
+      par_lab <- paste("{~t[w] %<-% phantom(0)}==",round(t.value(),2))}
     
     if(t.value() > max(densit()$x)) {
       par_x   <- max(densit()$x) 
-      par_lab <- paste("{phantom(0)%->%T[w]}==",round(t.value(),2))}
+      par_lab <- paste("{t[w] %->% phantom(0)}==",round(t.value(),2))}
     
     
     
@@ -233,14 +250,14 @@ shinyServer(function(input, output) {
     
     if(t.value() <  min(densit()$x)) {
       par_x[1]   <- min(densit()$x) 
-      par_lab[1] <- paste("{phantom(0)%<-%T[w]}==",round(-abs(t.value()),2))
-      if(input$sided == "=") par_lab[2] <- paste("{phantom(0)%->%T[w]}==",round(abs(t.value()),2))
+      par_lab[1] <- paste("{t[w]%<-%phantom(0)}==",round(-abs(t.value()),2))
+      if(input$sided == "=") par_lab[2] <- paste("{t[w]%->%phantom(0)}==",round(abs(t.value()),2))
     }
     
     if(t.value() >  max(densit()$x)) {
       par_x[1]   <- max(densit()$x) 
-      par_lab[1] <- paste("{phantom(0)%->%t[w]}==",round(abs(t.value()),2))
-      if(input$sided == "=") par_lab[2] <- paste("{phantom(0)%<-%T[w]}==",round(-abs(t.value()),2))
+      par_lab[1] <- paste("{t[w]%->%phantom(0)}==",round(abs(t.value()),2))
+      if(input$sided == "=") par_lab[2] <- paste("{t[w]%<-%phantom(0)}==",round(-abs(t.value()),2))
     }
     
     par_x[2] <- -par_x[1]
@@ -315,19 +332,19 @@ shinyServer(function(input, output) {
     par_hjust <- NULL
     
     par_x[1]   <- t.value() 
-    par_lab[1] <- paste("T[w]==",round(t.value(),2))
-    par_lab[2] <- paste("T[w]==",round(-t.value(),2))  
+    par_lab[1] <- paste("t[w]==",round(t.value(),2))
+    par_lab[2] <- paste("t[w]==",round(-t.value(),2))  
     
     if(t.value() <  min(densit()$x)) {
       par_x[1]   <- min(densit()$x) 
-      par_lab[1] <- paste("{phantom(0)%<-%T[w]}==",round(-abs(t.value()),2))
-      par_lab[2] <- paste("{phantom(0)%->%T[w]}==",round(abs(t.value()),2))
+      par_lab[1] <- paste("{t[w]%<-%phantom(0)}==",round(-abs(t.value()),2))
+      par_lab[2] <- paste("{t[w]%->%phantom(0)}==",round(abs(t.value()),2))
     }
     
     if(t.value() >  max(densit()$x)) {
       par_x[1]   <- max(densit()$x) 
-      par_lab[1] <- paste("{phantom(0)%->%T[w]}==",round(abs(t.value()),2))
-      par_lab[2] <- paste("{phantom(0)%<-%T[w]}==",round(-abs(t.value()),2))
+      par_lab[1] <- paste("{t[w]%->%phantom(0)}==",round(abs(t.value()),2))
+      par_lab[2] <- paste("{t[w]%<-%phantom(0)}==",round(-abs(t.value()),2))
     }
     
     par_x[2] <- -par_x[1]
@@ -387,7 +404,7 @@ shinyServer(function(input, output) {
   
   output$CI <- renderPlot({
     Xval <- input$one_X
-    Tval <- abs(qt(as.numeric(input$alpha),input$one_N-1)*(input$one_sd/sqrt(input$one_N-1)))
+    Tval <- abs(t.crit()*(input$one_sd/sqrt(input$one_N-1)))
     se <- data.frame(y="",x=Xval, xlow=Xval - Tval, xhigh=Xval +Tval)
     p <- ggplot(se, aes(x=y, y=x, ymin = xlow, ymax=xhigh)) +  
       geom_pointrange(lwd=1.5) +
@@ -506,7 +523,7 @@ shinyServer(function(input, output) {
     grid.text(bquote(N == .(as.numeric(input$one_N))), gp=gpar(fontsize=40), hjust=1)
     popViewport()
     pushViewport(vp.8)    
-    grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N) - 1) )} == .(round(t.value()),2)), 
+    grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N) - 1) )} == .(round(t.value(),2))), 
               gp=gpar(fontsize=40))
     popViewport()
     
@@ -517,5 +534,92 @@ shinyServer(function(input, output) {
     paste(input$one_X,input$one_u,input$s,input$one_N)
   })
   
+  output$dataset <- renderText({
+    
+    if(as.numeric(input$alpha)==.01){
+      values <- c(1,11) 
+      if(input$sided == "<") values <- c(2,11)
+      if(input$sided == ">") values <- c(12,1)
+    }
+      
+    if(as.numeric(input$alpha)==.05){
+      values <- c(3,7,2) 
+      if(input$sided == "<") values <- c(4,9)
+      if(input$sided == ">") values <- c(10,3)
+    }
+
+   if(as.numeric(input$alpha)==.1){
+      values <- c(4,5,3) 
+      if(input$sided == "<") values <- c(5,8)
+      if(input$sided == ">") values <- c(9,4)
+    }
+   
+   if(length(values) == 2) {
+     schema_kleur <-
+     paste('<colgroup>  <col span="',values[1],
+            '" ><col span="1" style="background-color:white">
+            <col span="',values[2],'" >
+    <col span="1" style="background-color:white">
+    </colgroup>')
+   }
+
+    if(length(values) == 3) {
+     schema_kleur <-
+     paste('<colgroup>  <col span="',values[1],
+            '" ><col span="1" style="background-color:white">
+            <col span="',values[2],'" >
+            <col span="1" style="background-color:white"><col span="',values[3],'" >
+            </colgroup>')
+   }
+
+    
+    VI <- ttable
+    VI <- capture.output(print(xtable(VI,digits=3),"HTML"))
+    VI[3] <- paste(VI[3],schema_kleur)
+    wehre <- which(str_detect(string=VI, paste('<TD align=\"right\">',critdf(),'</TD>')))
+    VI[wehre] <- gsub("<TR>","<tr bgcolor='white'>",VI[wehre])
+    VI
+  })
+  
+output$valuett <- renderPlot({
+    grid.text(bquote(t[krit] %~~% .(round(t.crit(),2))), gp=gpar(fontsize=40), hjust=1)
+    if(input$sided=="=")  grid.text(bquote(t[krit] %~~% .(round(-t.crit(),2))), gp=gpar(fontsize=40), hjust=-.25)
+
+})
+  
+
+
+  output$version <- renderPrint({
+    sessionInfo()
+    })
+
+  output$author <- renderPrint({
+    "Author: Huub Hoofs"
+    })
+
+  output$licence <- renderPrint({
+cat("
+The MIT License (MIT)
+
+Copyright (c) 2014 Huub
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the 'Software' ), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+")
+  })
   
 })

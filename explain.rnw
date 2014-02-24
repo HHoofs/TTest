@@ -10,14 +10,17 @@ require(grid)
 \usepackage{titlesec}
 \newcommand{\sectionbreak}{\clearpage}
 \usepackage[margin=2 cm]{geometry}
-
+\title{Toelichting t-toets}
+\author{Huub Hoofs}
 \makeatletter
 \setlength{\@fptop}{0pt}
 \setlength{\@fpbot}{0pt plus 1fil}
 \makeatother
 \begin{document}
 
+\maketitle
 \section{tweezijdig toetsen}
+
 Bij tweezijdig toetsen zien hypotheses er als volgt uit:
 $$
 \left\lbrace\begin{array}{l l} H_0 : \mu = 7 \\ 
@@ -93,7 +96,7 @@ grid.draw(gt)
 
 @
 
-Waarbij we dus de t\textsubscript{kritiek} aan beide kanten moeten opzoeken(!) omdat we een tweezijdige toets hebben. Deze kritieke t-waardes kunnen we vinden in de tabel (in dit geval gebruik ik de exacte t-waardes die je door een computerprogramma kan laten berekenen). Aangezien de twee rode (kritieke) gebieden samen gelijk aan .05 moeten zijn moet ieder rood gebiedje opzich .025 groot zijn. Daarom moet je in de tabel dus kijken in de kolom van .025. Om de positieve kritieke t-waarde te weten moet je of dit getal simpelweg positief maken of in de tabel onder .975 kijken, het resultaat is hetzelfde (controleer maar). De kritieke t-waardes bedragen in dit geval \Sexpr{-abs(t.crit)} \& \Sexpr{abs(t.crit)}, welke we vervolgens in het plaatje kunnen toevoegen (Figuur(Figuur \ref{fig:TWEE_V1_K_KWAARDE}))
+Waarbij we dus de t\textsubscript{kritiek} aan beide kanten moeten opzoeken(!) omdat we een tweezijdige toets hebben. Deze kritieke t-waardes kunnen we vinden in de tabel (in dit geval gebruik ik de exacte t-waardes die je door een computerprogramma kan laten berekenen). Aangezien de twee rode (kritieke) gebieden samen gelijk aan .05 moeten zijn moet ieder rood gebiedje opzich .025 groot zijn. Daarom moet je in de tabel dus kijken in de kolom van .025. Om de positieve kritieke t-waarde te weten moet je of dit getal simpelweg positief maken of in de tabel onder .975 kijken, het resultaat is hetzelfde (controleer maar). De kritieke t-waardes bedragen in dit geval \Sexpr{-abs(t.crit)} \& \Sexpr{abs(t.crit)}, welke we vervolgens in het plaatje kunnen toevoegen (Figuur \ref{fig:TWEE_V1_K_KWAARDE})
 
 <<"TWEE_V1_K_KWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Kritieke t-waardes invoegen (ontgonnen uit een tabel o.i.d.)">>=
 N <- 200
@@ -166,7 +169,7 @@ grid.draw(gt)
 Tot slot moeten we de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen en kijken hoe deze t-waarde zich verhoudt tot de kritieke gebieden:
 \begin{align}
 t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{6.65-7}{\frac{2}{sqrt{200-1}}}=\\
+t=\frac{6.65-7}{\frac{2}{\sqrt{200-1}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
@@ -249,10 +252,10 @@ grid.draw(gt)
 Aangezien onze gevonde t-waarde dus in het kritieke (rode) gebied ligt, verwerpen we dus de nulhypothese. 
 
 \subsubsection{P-Waarde}
-In deze methode gaan we de P-waarde uitrekenen van de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen. Hiervoor moeten we eerst de t-waarde weer uitrekenen, welke uiteraard nog steeds dezelfde uitkomst heeft (omdat de gevonden waardes en het populatiegemiddelde niet wijzigen!):
+In deze methode gaan we de P-waarde uitrekenen van de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Hiervoor moeten we eerst de t-waarde weer uitrekenen, welke uiteraard nog steeds dezelfde uitkomst heeft (omdat de gevonden waardes en het populatiegemiddelde niet wijzigen!):
 \begin{align}
 t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{6.65-7}{\frac{2}{sqrt{200-1}}}=\\
+t=\frac{6.65-7}{\frac{2}{\sqrt{200-1}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
@@ -452,7 +455,7 @@ grid.draw(gt)
 Nu moeten we alleen nog de t-waarde uitrekenen van het steekproefgemiddelde t.o.v. het populatiegemiddelde berekenen. Deze heeft nog steeds dezelfde uitkomst (omdat de \emph{richting} van de hypotheses de t-waarde niet be\"invloeden)!
 \begin{align}
 t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{6.65-7}{\frac{2}{sqrt{200-1}}}=\\
+t=\frac{6.65-7}{\frac{2}{\sqrt{200-1}}}=\\
 t=\frac{-0.35}{2/14.10}=\frac{-0.35}{0.14}=-2.47
 \end{align}
 
@@ -581,6 +584,7 @@ gt <- ggplot_gtable(ggplot_build(p))
 gt$layout$clip[gt$layout$name == "panel"] <- "off"
 grid.draw(gt)
 @
+
 Zoals je ziet is een enkele oranje gebied in figuur \ref{fig:ENKEL_V1_P_SPSS} gelijk aan het ongekleurde gebied in figuur \ref{fig:ENKEL_V1_P_TWAARDE}. Daarom is het blauwe gebied in figuur \ref{fig:ENKEL_V1_P_TWAARDE} gelijk aan: 
 $$
 blauw~gebied = 1 - (een~enkel~oranje~gebiedje)
@@ -691,11 +695,12 @@ grid.draw(gt)
 Het enige wat wel veranderd, en wat dus opnieuw berekend moet worden, is de t-waarde van het steekproefgemiddelde t.o.v. het populatiegemiddelde. Deze wordt als volgt berekend:
 \begin{align}
 t=\frac{\bar{X}-\mu}{\frac{s}{\sqrt{N-1}}}= \\
-t=\frac{7.2-7}{\frac{1}{sqrt{200-1}}}=\\
+t=\frac{7.2-7}{\frac{1}{\sqrt{200-1}}}=\\
 t=\frac{0.2}{1/14.10}=\frac{0.2}{0.07}=2.85
 \end{align}
 
 Wat ons nog rest is om deze t-waarde in te vullen en de conclusie te trekken of de t-waarde wel of niet in het kritieke gebied valt, zie figuur \ref{fig:ENKEL_V2_K_TWAARDE}.
+
 <<"ENKEL_V2_K_TWAARDE", echo=FALSE,fig.width=10, fig.height=6, fig.env="figure", fig.align="center", fig.pos="!ht", fig.cap="Berekende t-waarde invoegen">>=
 #T.crit
 t.crit <- qt(p=alpha, N-1,lower.tail=FALSE)
