@@ -1,3 +1,24 @@
+#   The MIT License (MIT)
+# 
+# Copyright (c) 2014 Huub
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the 'Software' ), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 library(grid)
 library(ggplot2)
 require(xtable)
@@ -34,22 +55,22 @@ colnames(ttable) <- levels
 shinyServer(function(input, output) {
   
   t.value <- reactive({
-    if(input$ttest){
+    if(input$test == "onettest"){
       t.val <- (input$one_X-input$one_u)/(input$one_sd/sqrt(input$one_N))
     }
-    if(input$twottest){
+    if(input$test == "twottest"){
       t.val <- (input$two_X1 - input$two_X2)/sqrt( (input$two_sd1^2)/input$two_N1 + (input$two_sd2^2)/input$two_N2)
     }
     t.val
   })
   
   t.crit <- reactive({
-    if(input$ttest){
+    if(input$test == "onettest"){
       if(input$sided == "=") value <- qt(p=as.numeric(input$alpha)/2, input$one_N-1)
       if(input$sided == "<") value <- qt(p=as.numeric(input$alpha), input$one_N-1)
       if(input$sided == ">") value <- qt(p=as.numeric(input$alpha), input$one_N-1, lower.tail=FALSE)
     }
-    if(input$twottest){
+    if(input$test == "twottest"){
       if(input$sided == "=") value <- qt(p=as.numeric(input$alpha)/2, input$two_N1 + input$two_N2 -2)
       if(input$sided == "<") value <- qt(p=as.numeric(input$alpha), input$two_N1 + input$two_N2 -2)
       if(input$sided == ">") value <- qt(p=as.numeric(input$alpha), input$two_N1 + input$two_N2 -2, lower.tail=FALSE)
@@ -58,7 +79,7 @@ shinyServer(function(input, output) {
   })
   
   critdf <- reactive({
-    if(input$ttest){
+    if(input$test == "onettest"){
       if(input$one_N - 1 >= 200) value <- "z"
       if(input$one_N - 1 < 200) value <- 100
       if(input$one_N - 1 < 100) value <- 80
@@ -68,7 +89,7 @@ shinyServer(function(input, output) {
       if(input$one_N - 1 < 40) value <-  30
       if(input$one_N - 1 < 30) value <- input$one_N - 1
     }
-    if(input$twottest){
+    if(input$test == "twottest"){
       if(input$two_N1 + input$two_N2 -2 >= 200) value <- "z"
       if(input$two_N1 + input$two_N2 -2 < 200) value <- 100
       if(input$two_N1 + input$two_N2 -2 < 100) value <- 80
@@ -82,8 +103,8 @@ shinyServer(function(input, output) {
   })
   
   df <- reactive({
-    if(input$ttest) valdf <- input$one_N-1
-    if(input$twottest) valdf <-  input$two_N1 + input$two_N2 -2
+    if(input$test == "onettest") valdf <- input$one_N-1
+    if(input$test == "twottest") valdf <-  input$two_N1 + input$two_N2 -2
     valdf
     
   })
@@ -431,7 +452,7 @@ shinyServer(function(input, output) {
   
   output$CI <- renderPlot({
     
-    if(input$ttest){
+    if(input$test == "onettest"){
       Xval <- input$one_X
       Tval <- abs(t.crit()*(input$one_sd/sqrt(input$one_N)))
       se <- data.frame(y="",x=Xval, xlow=Xval - Tval, xhigh=Xval +Tval)
@@ -453,7 +474,7 @@ shinyServer(function(input, output) {
     }
     
     
-    if(input$twottest){
+    if(input$test == "twottest"){
       lowX <- input$two_X1 - input$two_X2 - (abs(t.crit())* sqrt(((input$two_sd1^2)/input$two_N1) +((input$two_sd1^2)/input$two_N1)))
       highX<- input$two_X1 - input$two_X2 + (abs(t.crit())* sqrt(((input$two_sd1^2)/input$two_N1) +((input$two_sd1^2)/input$two_N1)))
       Xval <- input$two_X1 - input$two_X2
@@ -483,7 +504,7 @@ shinyServer(function(input, output) {
   })
   
   output$CI_info <- renderPlot({
-    if(input$ttest){
+    if(input$test == "onettest"){
       gl <- grid.layout(nrow=1, ncol=2)
       vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1) 
       vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
@@ -520,7 +541,7 @@ shinyServer(function(input, output) {
       }
     }
     
-    if(input$twottest){
+    if(input$test == "twottest"){
       gl <- grid.layout(nrow=1, ncol=2)
       vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1) 
       vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
@@ -559,7 +580,7 @@ shinyServer(function(input, output) {
   })
   
   output$hypopaar <- renderPlot({
-    if(input$ttest){
+    if(input$test == "onettest"){
       plot.new() 
       
       # setup layout
@@ -624,7 +645,7 @@ shinyServer(function(input, output) {
       grid.text(bquote({t[w] == frac( .(input$one_X) - .(input$one_u),.(input$one_sd)/sqrt(.(input$one_N)) )} == .(round(t.value(),2))), 
                 gp=gpar(fontsize=40))
       popViewport()}
-    if(input$twottest){
+    if(input$test == "twottest"){
       plot.new() 
       
       # setup layout

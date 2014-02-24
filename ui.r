@@ -1,3 +1,24 @@
+#   The MIT License (MIT)
+# 
+# Copyright (c) 2014 Huub
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the 'Software' ), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 library(shiny)
 shinyUI(pageWithSidebar(
   
@@ -27,13 +48,17 @@ shinyUI(pageWithSidebar(
     # Keuze alpha
     selectInput("alpha",strong(HTML("&alpha;:")),c(.01,.05,.1),selected=.05),
     # Keuze nulhypothese
-    radioButtons("sided",strong("Richting Nul Hypothese"),
+    radioButtons("sided",strong("Richting Nul Hypothese:"),
                  list("H0: μ = ..." = "=",
                       "H0: μ ≥ ..." = "<",
                       "H0: μ ≤ ..." = ">")),
     # Keuze ttest 
-    wellPanel(checkboxInput("ttest",strong("t-toets voor één steekproef"),value=TRUE),
-              conditionalPanel(condition = paste("input.ttest == true"),
+    radioButtons("test",strong("Soort test:"),
+                 list("t-toets voor één steekproef" = "onettest",
+                      "t-toets voor twee steekproeven" = "twottest"
+                      )),
+    wellPanel(
+              conditionalPanel(condition = paste("input.test == 'onettest'"),
                                # Populatie gemiddelde
                                sliderInput("one_u", "u (populatiegemiddelde)",min=0, max=10, value=7, step=.1),
                                # Steekproefgemiddelde
@@ -42,9 +67,8 @@ shinyUI(pageWithSidebar(
                                sliderInput("one_sd", "s (standaard deviatie)",min=0, max=12, value=1, step=.1),
                                # Groepsgrootte
                                sliderInput("one_N", "N (steekproefgrootte)",min=0, max=2000, value=42, step=1)
-              )),
-    wellPanel(checkboxInput("twottest",strong("t-toets voor twee steekproeven"),value=FALSE),
-              conditionalPanel(condition = paste("input.twottest == true"),
+              ),
+              conditionalPanel(condition = paste("input.test == 'twottest'"),
                                # Steekproefgemiddelde
                                sliderInput("two_X1", "X1 (gemiddelde groep 1)",min=0, max=10, value=6.9, step=.1),
                                # Standaard deviatie
@@ -52,11 +76,11 @@ shinyUI(pageWithSidebar(
                                # Groepsgrootte
                                sliderInput("two_N1", "N (steekproefgrootte groep 1)",min=0, max=2000, value=42, step=1),
                                # Steekproefgemiddelde
-                               sliderInput("two_X2", "X1 (gemiddelde groep 2)",min=0, max=10, value=6.9, step=.1),
+                               sliderInput("two_X2", "X2 (gemiddelde groep 2)",min=0, max=10, value=6.9, step=.1),
                                # Standaard deviatie
-                               sliderInput("two_sd2", "s1 (standaard deviatie groep 2)",min=0, max=12, value=1, step=.1),
+                               sliderInput("two_sd2", "s2 (standaard deviatie groep 2)",min=0, max=12, value=1, step=.1),
                                # Groepsgrootte
-                               sliderInput("two_N2", "N (steekproefgrootte groep 2)",min=0, max=2000, value=42, step=1)
+                               sliderInput("two_N2", "N2 (steekproefgrootte groep 2)",min=0, max=2000, value=42, step=1)
               )),
     # Opties
     wellPanel(checkboxInput("options",strong("Opties"),value=TRUE),
@@ -70,7 +94,7 @@ shinyUI(pageWithSidebar(
     # Plaatje
     HTML('<a href="http://www.maastrichtuniversity.nl/" target="_blank"><img src="logo.jpg" alt="Maastricht University"  border="0" style="border: #00A2DB solid 1px; border-radius: 5px;"/></a>')
   ),
-  
+
   # Show the generated 3d scatterplot
   mainPanel(
     # Opmaakt html
