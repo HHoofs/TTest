@@ -212,6 +212,7 @@ shinyServer(function(input, output) {
   })
   
   output$plotH <- renderPlot({
+    grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
     if(input$answ2){
       if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
     }
@@ -373,26 +374,12 @@ shinyServer(function(input, output) {
     # init layout
     pushViewport(viewport(layout=gl))
     # access the first position
-    pushViewport(vp.1)
-    
-    # start new base graphics in first viewport
-    par(new=TRUE, fig=gridFIG())
-    
+    pushViewport(vp.1)    
     grid.draw(gt) 
-    
-    # done with the first viewport
     popViewport()
     
-    #   # move to the next viewport
-    #   pushViewport(vp.2)
-    #   
-    #   #text
-    #   grid.text(bquote({t == frac( .(input$one_X) - .(input$one_u),frac(.(input$one_sd),sqrt(.(input$one_N) - 1)) )} == .(round(t.value()),2)), gp=gpar(fontsize=40))
-    # 
-    #   popViewport()
-    
-    # move to the next viewport
     pushViewport(vp.2)
+    grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
     if(input$answ2){
       if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
     }
@@ -406,6 +393,9 @@ shinyServer(function(input, output) {
       geom_pointrange(lwd=1.5) +
       geom_errorbar(width = 0.5, lwd = 1.5)  + 
       geom_hline(yintercept=input$one_u) + 
+      annotate("text",y=se$xlow,  x=.7,label=round(se$xlow,2)) +
+      annotate("text",y=se$xhigh, x=.7,label=round(se$xhigh,2)) +
+      annotate("text",y=se$x, x=.95,label=round(se$x,2)) +
       scale_y_continuous(breaks=input$one_u, labels=list(bquote(mu == .(input$one_u))),name="") + scale_x_discrete(name="")
     
     p <- p + 
@@ -414,6 +404,41 @@ shinyServer(function(input, output) {
       coord_flip()
     
     print(p)
+  })
+  
+  output$CI_info <- renderPlot({
+    gl <- grid.layout(nrow=1, ncol=2)
+    vp.1 <- viewport(layout.pos.col=1, layout.pos.row=1) 
+    vp.2 <- viewport(layout.pos.col=2, layout.pos.row=1) 
+    
+    # init layout
+    pushViewport(viewport(layout=gl))
+    # access the first position
+    pushViewport(vp.1)    
+    grid.text(bquote(group("(",list(
+      bar(X)-t[list(alpha/2,N-1)]*frac(s,sqrt(N-1)),
+      bar(X)+t[list(alpha/2,N-1)]*frac(s,sqrt(N-1))
+    ),")")),
+    gp=gpar(fontsize=20),vjust=-2)
+    
+    grid.text(bquote(group("(",list(
+      .(input$one_X)-.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N)-1)),
+      .(input$one_X)+.(round(abs(t.crit()),2))*frac(.(input$one_sd),sqrt(.(input$one_N)-1)) 
+    ),")")),
+    gp=gpar(fontsize=20))
+    
+    grid.text(bquote(group("(",list(
+      .(round(input$one_X-abs(t.crit())*(input$one_sd/sqrt(input$one_N-1)),2) ),
+      .(round(input$one_X+abs(t.crit())*(input$one_sd/sqrt(input$one_N-1)),2) )
+    ),")")),
+    gp=gpar(fontsize=20),vjust=4)
+    popViewport()
+    
+    pushViewport(vp.2)
+    grid.text("Conclusie:",gp=gpar(fontsize=40),vjust=-2)
+    if(input$answ2){
+      if(hypo() == "HA") grid.text(expression(H[A]),gp=gpar(fontsize=80)) else grid.text(expression(H[0]),gp=gpar(fontsize=80))
+    }
   })
   
   output$hypopaar <- renderPlot({

@@ -82,7 +82,7 @@ tags$style(type='text/css', ".span4 { max-width: 310px; }")
     tabsetPanel(tabPanel("Waardes",plotOutput("hypopaar",width="800px",height="600px")),           
                 tabPanel("Kritieke gebied",plotOutput("plot",width="800px",height="600px"),plotOutput("plotH",width="800px",height="300px")),
                 tabPanel("p-waarde",plotOutput("plot2",width="800px",height="600px"),plotOutput("plot3",width="800px",height="300px")),
-                tabPanel("Betrouwbaarheids Interval",plotOutput("CI",width="800px",height="600px")),
+                tabPanel("Betrouwbaarheids Interval",plotOutput("CI",width="800px",height="600px"),plotOutput("CI_info",width="800px",height="300px")),
                 
                 tabPanel("Overzicht",verbatimTextOutput("summar")),
                 tabPanel("Version (C)",verbatimTextOutput("version"))
