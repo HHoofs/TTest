@@ -151,7 +151,7 @@ shinyServer(function(input, output) {
   
   # Hypothese test -------------------------------------------------------------- 
   hypo <- reactive({
-    if(pval() < input$alpha) "HA" else "H0" # Als p < a dan Ha anders H0
+    if(pval() < as.numeric(input$alpha)) "HA" else "H0" # Als p < a dan Ha anders H0
   })
   
   # Kritieke gebied Polygon dat in het midden hoort -------------------------------------------------------------
@@ -213,7 +213,7 @@ shinyServer(function(input, output) {
                y=c(polygon$y, rep(-(max(densit()$y)/20), times=length(polygon$x)))
     )
   })
-
+  
   # P waarde Polygon dat hoort bij SPSS (Dus altijd tweezijdig) -------------------------------------------------------------
   polygSpss <- reactive({
     polygon <- densit()
@@ -318,6 +318,7 @@ shinyServer(function(input, output) {
   output$pwaarde_plot <- renderPlot({  
     # Voor het gemak gevonde t waarde opnieuw inlezen
     t.va <- t.value()
+    t.cr <- abs(t.crit())
     
     # Adjust t value placement if it cross the border!
     # Legen objecten om ze hierna te vullen
@@ -347,7 +348,7 @@ shinyServer(function(input, output) {
     # Aanpassen welke kant t-waarde van de lijn staat 
     if(par_x[1] < 0) par_hjust[1] <- 0 else  par_hjust[1] <- 1 # Naar links rechtsuitlijnen
     if(par_x[2] < 0) par_hjust[2] <- 0 else  par_hjust[2] <- 1 # Naar rechts linksuitlijnen
-
+    
     # Basis Plot (density frame en lijntjes trekken)
     p <-
       ggplot(densit(),aes(x=x,y=y)) +
@@ -355,23 +356,53 @@ shinyServer(function(input, output) {
     
     # Tweezijdig
     if(input$sided == "="){
+      if(input$krit){
+        p <-
+          p +
+          geom_polygon(aes(x=x,y=y),data=polygL(),alpha=.6, fill="magenta") +  # Ha frame
+          geom_polygon(aes(x=x,y=y),data=polygR(),alpha=.6, fill="magenta") +  # Ha frame
+          geom_segment(x=-t.cr,xend=-t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1,lty="dashed") + # afbakening H0 links
+          geom_segment(x=t.cr,xend=t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1,lty="dashed") +   # afbakening H0 rechts
+          annotate("text",label=paste("t[krit]==",round(t.cr,2)), x = t.cr , y = densit()[which.min(abs(t.cr-densit()$x)),"y"], hjust = 0,vjust=0, size=8,parse=TRUE) + # kritieke waarde weergeven
+          annotate("text",label=paste("t[krit]==",round(-t.cr,2)), x = -t.cr , y = densit()[which.min(abs(t.cr-densit()$x)),"y"], hjust = 1, vjust=0,size=8,parse=TRUE) # kritieke waarde weergeven   
+      }
       p <-
         p +
         geom_polygon(aes(x=x,y=y),data=polygProp(), alpha=.8, fill="#001C3D") + # Gebied waarschijnlijkheid
         geom_polygon(aes(x=x,y=y),
                      data=data.frame(x=-polygProp()$x,y=polygProp()$y), # spiegeling gebied waarschijnlijkheid (want tweezijdig)
                      alpha=.8, fill="#001C3D"
-                     ) + 
+        ) + 
         geom_segment(x=par_x[1], xend=par_x[1], y=-Inf,yend=densit()[which.min(abs(par_x[1]-densit()$x)), "y"], lwd=1.5) + # afbakening gebied 
         geom_segment(x=par_x[2], xend=par_x[2], y=-Inf,yend=densit()[which.min(abs(par_x[2]-densit()$x)),"y"], lwd=1.5) +  # afbakening gebied 
         annotate("text",label=par_lab[1], x = par_x[1], y = -Inf, vjust = 1.5,size=8,parse=TRUE, hjust= par_hjust[1]) + # gevonden waarde weergeven
         annotate("text",label=par_lab[2], x = par_x[2], y = -Inf, vjust = 1.5,size=8,parse=TRUE, hjust= par_hjust[2])   # gevonden waarde weergeven
+      
+      
+      
     } else {
+      if(input$krit){
+        if(input$sided == "<"){
+          p <-
+            p + 
+            geom_polygon(aes(x=x,y=y),data=polygL(),alpha=.6, fill="magenta") +  # Ha frame
+            geom_segment(x=-t.cr,xend=-t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1,lty="dashed") + # afbakening H0 links
+            annotate("text",label=paste("t[krit]==",round(-t.cr,2)), x = -t.cr , y = densit()[which.min(abs(t.cr-densit()$x)),"y"], hjust = 1, vjust=0 ,size=8,parse=TRUE) # kritieke waarde weergeven        
+        }
+        if(input$sided == ">"){
+          p <-
+            p + 
+            geom_polygon(aes(x=x,y=y),data=polygR(),alpha=.6, fill="magenta") +  # Ha frame
+            geom_segment(x=t.cr,xend=t.cr,y=-Inf,yend=densit()[which.min(abs(t.cr-densit()$x)),"y"],lwd=1,lty="dashed") + # afbakening H0 links
+            annotate("text",label=paste("t[krit]==",round(t.cr,2)), x = t.cr , y = densit()[which.min(abs(t.cr-densit()$x)),"y"], hjust = 0, vjust=0 ,size=8,parse=TRUE) # kritieke waarde weergeven        
+        }
+      }
       p <-
         p +
         geom_polygon(aes(x=x,y=y),data=polygProp(), alpha=.8, fill="#001C3D") +  # Gebied waarschijnlijkheid
         geom_segment(x=par_x[1], xend=par_x[1], y=-Inf,yend=densit()[which.min(abs(par_x[1]-densit()$x)), "y"], lwd=1.5) + # afbakening gebied 
         annotate("text",label=par_lab[1], x = par_x[1], y = -Inf, vjust = 1.5,size=8,parse=TRUE, hjust= par_hjust[1]) # gevonden waarde weergeven
+      
     }
     
     # laatste opmaak
@@ -457,7 +488,7 @@ shinyServer(function(input, output) {
     gt$layout$clip[gt$layout$name == "panel"] <- "off"
     
     plot.new() 
-
+    
     # Samenvoegen plot SPSS en conclusie
     gl <- grid.layout(nrow=1, ncol=2)
     # grid.show.layout(gl)
@@ -503,7 +534,7 @@ shinyServer(function(input, output) {
         coord_flip() # Omdraaien   
       print(p) # Printen
     }
- 
+    
     # BI voor t weeteekproeven   
     if(input$test == "twottest"){
       # Berkeening hoog en laag BI
@@ -522,7 +553,7 @@ shinyServer(function(input, output) {
         annotate("text",y=BI$x, x=.95,label=round(BI$x,2)) +
         scale_y_continuous(breaks=0, labels=list(bquote(t == 0)),name="") + 
         scale_x_discrete(name="")
-        ggtitle("Betrouwbaarheids Interval") +
+      ggtitle("Betrouwbaarheids Interval") +
         theme_bw(20)  +
         coord_flip()  
       print(p)
@@ -534,7 +565,7 @@ shinyServer(function(input, output) {
       grid.text("Niet mogelijk bij eenzijdig toetsen", gp=gpar(fontsize=40))
     }
   })
-
+  
   # BI waarde toevoeging (BI berekenen & conclusie e.d.) ------------------------------------------------------------- 
   output$CI_conc <- renderPlot({
     # Eenzijdig
@@ -774,7 +805,7 @@ shinyServer(function(input, output) {
     <col span="1" style="background-color:white">
     </colgroup>')
     }
-
+    
     # Als er drie aaneengesloten "lege" kolomspans zijn
     if(length(values) == 3) {
       schema_kleur <-
@@ -809,7 +840,7 @@ shinyServer(function(input, output) {
     # uitvoer printen
     ttableHTML
   })
-
+  
   # Exacte uitkomst van Imbos tabel (Waarmee gerekend wordt) -------------------------------------------------------------  
   output$critt <- renderPlot({
     # Achtergrond
@@ -825,11 +856,12 @@ shinyServer(function(input, output) {
     # Versie en sessie info
     sessionInfo()
   })
-
+  
   # Author info -------------------------------------------------------------     
   output$author <- renderPrint({
     "Author: Huub Hoofs"
     #42
+    #     hypo()
   })
   
   # Lincence info -------------------------------------------------------------    

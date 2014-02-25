@@ -30,6 +30,7 @@ shinyUI(
       # HTML opmaak e.d.
       tags$head(
         HTML('<body style="background-color: #00A2DB;">'),
+        #         tags$style(type = "text/css", "a{color: #f50000;}"),
         tags$style(type="text/css", "select { color: #001C3D }"),
         tags$style(type="text/css", "textarea { max-width: 365px; color: #001C3D}"),
         tags$style(type="text/css", ".jslider { max-width: 380px; color: #001C3D}"),
@@ -67,10 +68,13 @@ shinyUI(
                          sliderInput("one_u", "u (populatiegemiddelde)",min=0, max=10, value=7, step=.1),
                          # Steekproefgemiddelde
                          sliderInput("one_X", "X (steekproefgemiddelde)",min=0, max=10, value=6.9, step=.1,animate=TRUE),
+#                          sliderInput("one_X", "X (steekproefgemiddelde)",min=1, max=10, value=6, step=1,animate=TRUE),
                          # Standaard deviatie
                          sliderInput("one_sd", "s (standaard deviatie)",min=0, max=12, value=1, step=.1),
+#                          sliderInput("one_sd", "s (standaard deviatie)",min=1, max=12, value=1, step=1),
                          # Groepsgrootte
                          sliderInput("one_N", "N (steekproefgrootte)",min=0, max=2000, value=42, step=1)
+#                          sliderInput("one_N", "N (steekproefgrootte)",min=1980, max=2000, value=1989, step=1)
         ),
         # Twee sample t-test
         conditionalPanel(condition = paste("input.test == 'twottest'"),
@@ -94,7 +98,8 @@ shinyUI(
                                  # Bereik grafieken
                                  sliderInput("lim", "Bereik",min=0, max=20, value=5, step=1),
                                  # Antwoord?
-                                 checkboxInput("conc", "Conclusie",value=FALSE)
+                                 checkboxInput("conc", "Conclusie",value=FALSE),
+                                 checkboxInput("krit", "p-waarde + kritiek gebied",value=FALSE)
                 )
       ),
       # Plaatje UNI
@@ -106,13 +111,15 @@ shinyUI(
     mainPanel(
       # Opmaakt html
       tags$head(
-        tags$style(type="text/css", "li a{color: #001C3D; font-weight:bold; background-color:white;}")
+        tags$style(type="text/css", "li a{color: white;  background-color:#001C3D;}")
+        #         tags$style(type="text/css", ".active li a{color: black; font-weight:bold; background-color:black;}")
+        
       ),
       # Verschillende tabPanels
       tabsetPanel(
         # Info hoe alles werkt
         tabPanel("Info",
-                 HTML("<P STYLE='background-color: white;'>Deze applicatie laat de drie methodes zien waarmee je kan toetsen of een gevonden steekproefgemiddelde overeenkomt met het populatiegemiddelde (gegeven de hypotheses) of dat twee steekproefgemiddelde uit dezelfde populatie komen. Het tabblad 'waardes' geeft alle relevante informatie en berekend de t-waarde. Propeer deze t-waarde ook een paar keer zelf te berekenen en controleer of het klopt. De volgende drie tabbladen laten de drie methodes zien waarmee je kan bepalden welke hypothese je moet aannemen dan wel verwerpen. Probeer eerst zelf te bedenken welke hypothese je aanneemt en druk vervolgens op conclusie (onder opties), om te controleren of dit correct is. Het laatste tabblad ('t-tabel') laat zien in welke rijen en welke kolom je moet kijken in de tabel op pagina 306 van Imbos et al. Aan de linkse kant kan je de waardes veranderen, de alpha en de richting van de nulhypothese (en dus ook de alternatieve). Veel succes en probeer alle verschillende methodes eens uit en kijk (of je weet) wat er gebeurd als je waardes veranderd. </P>")
+                 HTML("<P STYLE='background-color: white;'>Deze applicatie laat de drie methodes zien waarmee je kan toetsen of een gevonden steekproefgemiddelde overeenkomt met het populatiegemiddelde (gegeven de hypotheses) of dat twee steekproefgemiddelden uit dezelfde populatie komen. Het tabblad 'waardes' geeft alle relevante informatie en berekent de t-waarde. Probeer deze t-waarde ook een paar keer zelf te berekenen en controleer of het klopt. De volgende drie tabbladen laten de drie methodes zien waarmee je kan bepalen welke hypothese je moet aannemen dan wel verwerpen. Probeer eerst zelf te bedenken welke hypothese je aanneemt en druk vervolgens op conclusie (onder opties), om te controleren of dit correct is. Het laatste tabblad ('t-tabel') laat zien in welke rijen en welke kolom je moet kijken in de tabel op pagina 306 van Imbos et al. Aan de linkerkant kun je de waardes veranderen, de alpha en de richting van de nulhypothese (en dus ook de alternatieve). Veel succes en probeer alle verschillende methodes eens uit en kijk (of je weet) wat er gebeurt als je waardes verandert. </P>")
         ), 
         # Hypotheses en waardes 
         tabPanel("Waardes",
