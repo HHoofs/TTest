@@ -538,8 +538,8 @@ shinyServer(function(input, output) {
     # BI voor t weeteekproeven   
     if(input$test == "twottest"){
       # Berkeening hoog en laag BI
-      lowX <- input$two_X1 - input$two_X2 - (abs(t.crit()) * sqrt(((input$two_sd1^2)/input$two_N1) + ((input$two_sd1^2)/input$two_N1)))
-      highX<- input$two_X1 - input$two_X2 + (abs(t.crit()) * sqrt(((input$two_sd1^2)/input$two_N1) + ((input$two_sd1^2)/input$two_N1)))
+      lowX <- input$two_X1 - input$two_X2 - (abs(t.crit()) * sqrt(((input$two_sd1^2)/input$two_N1) + ((input$two_sd2^2)/input$two_N2)))
+      highX<- input$two_X1 - input$two_X2 + (abs(t.crit()) * sqrt(((input$two_sd1^2)/input$two_N1) + ((input$two_sd2^2)/input$two_N2)))
       # Point estimate
       Xval <- input$two_X1 - input$two_X2
       # Data frame
@@ -552,8 +552,8 @@ shinyServer(function(input, output) {
         annotate("text",y=BI$xhigh, x=.7,label=round(BI$xhigh,2)) +
         annotate("text",y=BI$x, x=.95,label=round(BI$x,2)) +
         scale_y_continuous(breaks=0, labels=list(bquote(t == 0)),name="") + 
-        scale_x_discrete(name="")
-      ggtitle("Betrouwbaarheids Interval") +
+        scale_x_discrete(name="") +
+        ggtitle("Betrouwbaarheids Interval") +
         theme_bw(20)  +
         coord_flip()  
       print(p)
